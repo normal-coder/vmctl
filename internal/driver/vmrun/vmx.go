@@ -3,6 +3,7 @@ package vmrun
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -100,4 +101,46 @@ func unquote(s string) string {
 		return s[1 : len(s)-1]
 	}
 	return s
+}
+
+// setVMXKeys writes key/value pairs into a .vmx file, preserving
+// existing lines and formatting. Keys missing from the file are
+// appended. UTF-16 encoded files are rejected (writing them back
+// correctly is not implemented yet).
+func setVMXKeys(path string, keys map[string]string) error {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	if isUTF16(raw) {
+		return fmt.Errorf("%s: UTF-16 encoded vmx is not supported for editing", path)
+	}
+	trimmed := bytes.TrimPrefix(raw, []byte{0xEF, 0xBB, 0xBF})
+	lines := splitLines(strings.TrimSuffix(string(trimmed), "\n"))
+	if lines == nil {
+		lines = []string{}
+	}
+
+	for key, val := range keys {
+		matched := false
+		lowerKey := strings.ToLower(key)
+		for i, line := range lines {
+			k, _, ok := strings.Cut(line, "=")
+			if !ok || strings.ToLower(strings.TrimSpace(k)) != lowerKey {
+				continue
+			}
+			lines[i] = strings.TrimSpace(k) + " = " + quote(val)
+			matched = true
+			break
+		}
+		if !matched {
+			lines = append(lines, key+" = "+quote(val))
+		}
+	}
+
+	mode := os.FileMode(0o644)
+	if st, err := os.Stat(path); err == nil {
+		mode = st.Mode().Perm()
+	}
+	return os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), mode)
 }

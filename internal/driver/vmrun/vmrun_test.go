@@ -88,8 +88,38 @@ func newTestEnv(t *testing.T) (*Driver, *fakeExec, map[string]string) {
 
 	fake := &fakeExec{
 		respond: func(args []string) (string, error) {
-			if cmd := stripHostType(args); len(cmd) > 0 && cmd[0] == "list" {
+			cmd := stripHostType(args)
+			if len(cmd) == 0 {
+				return "", nil
+			}
+			switch cmd[0] {
+			case "list":
 				return "Total running VMs: 1\n" + paths["demo-one"] + "\n", nil
+			case "clone":
+				// Emulate vmrun: create the destination bundle + vmx
+				// and apply -cloneName to the destination displayName.
+				src, dest := cmd[1], cmd[2]
+				if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+					return "", err
+				}
+				data, err := os.ReadFile(src)
+				if err != nil {
+					return "", err
+				}
+				if err := os.WriteFile(dest, data, 0o644); err != nil {
+					return "", err
+				}
+				for _, a := range cmd {
+					if cn, ok := strings.CutPrefix(a, "-cloneName="); ok {
+						if err := setVMXKeys(dest, map[string]string{"displayName": cn}); err != nil {
+							return "", err
+						}
+					}
+				}
+				return "", nil
+			case "deleteVM":
+				// Emulate vmrun: remove the whole bundle.
+				return "", os.RemoveAll(filepath.Dir(cmd[1]))
 			}
 			return "", nil
 		},
