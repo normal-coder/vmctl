@@ -102,4 +102,4 @@ internal/model     与后端无关的 VM 模型
 - [x] M2：create / clone / set / delete
 - [x] M3：snapshot 全套 + guest exec + ip / shell
 - [ ] M4：vsphere 后端（govomi）+ profile 配置
-- [ ] M5：shell 补全、体验打磨
+- [ ] M5：vmcli 同名快照 fallback、shell 补全、体验打磨
