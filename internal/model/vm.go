@@ -31,3 +31,11 @@ type VMInfo struct {
 	ToolsState string `json:"tools_state,omitempty"`
 	GuestIP    string `json:"guest_ip,omitempty"`
 }
+
+// Snapshot is one entry of a VM's snapshot tree.
+type Snapshot struct {
+	Name string `json:"name"`
+	// Depth is the nesting level (0 = root). Set when the backend
+	// reports hierarchy; flat listings use 0 for every entry.
+	Depth int `json:"depth,omitempty"`
+}

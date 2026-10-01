@@ -85,6 +85,17 @@ func (o SetOptions) Empty() bool {
 	return o.Name == nil && o.MemoryMB == nil && o.CPUs == nil
 }
 
+// ExecOptions describes a command to run inside the guest.
+type ExecOptions struct {
+	// Script is the shell command text, executed via /bin/sh -c in
+	// the guest. Support for quoting, pipes etc. follows /bin/sh.
+	Script string
+	// User and Password authenticate against the guest OS
+	// (vmrun's -gu/-gp). Empty values let the backend decide.
+	User     string
+	Password string
+}
+
 // Driver is the unified backend interface.
 type Driver interface {
 	// Name returns the backend identifier ("vmrun", "vsphere", ...).
@@ -115,6 +126,28 @@ type Driver interface {
 	Set(ctx context.Context, ref string, opts SetOptions) error
 	// Delete permanently removes the VM and its files.
 	Delete(ctx context.Context, ref string) error
+
+	// Snapshot operations.
+	// Snapshots lists the snapshots of the VM matching ref. With
+	// tree=true the backend reports hierarchy via Snapshot.Depth.
+	Snapshots(ctx context.Context, ref string, tree bool) ([]model.Snapshot, error)
+	// SnapshotCreate creates a snapshot with the given name.
+	SnapshotCreate(ctx context.Context, ref, name string) error
+	// SnapshotDelete removes one snapshot; deleteChildren also
+	// removes its descendants.
+	SnapshotDelete(ctx context.Context, ref, name string, deleteChildren bool) error
+	// SnapshotRevert resets the VM to a snapshot.
+	SnapshotRevert(ctx context.Context, ref, name string) error
+
+	// Guest operations.
+	// Exec runs Script inside the guest and returns the captured
+	// combined output and the guest program's exit code. A non-nil
+	// error means the execution layer itself failed (auth, Tools,
+	// unreachable guest) — distinct from a non-zero guest exit code.
+	Exec(ctx context.Context, ref string, opts ExecOptions) (output string, exitCode int, err error)
+	// GuestIP returns the guest's IP address. wait=true blocks until
+	// the guest reports one (backend-dependent).
+	GuestIP(ctx context.Context, ref string, wait bool) (string, error)
 }
 
 // Options carries backend construction settings.
