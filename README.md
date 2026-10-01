@@ -8,6 +8,14 @@ vmctl 是一个参考 `prlctl` 命令风格设计的 VMware 虚拟机控制 CLI�
 ## 构建
 
 ```bash
+make build          # 构建到 bin/vmctl（版本号自动注入 git 短哈希）
+make check          # 格式化 + go vet + 测试
+make install        # 安装到 GOPATH/bin
+```
+
+或直接使用 go 命令：
+
+```bash
 go build -o bin/vmctl ./cmd/vmctl
 ```
 
