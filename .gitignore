@@ -1,0 +1,17 @@
+# Binaries
+/bin/
+/dist/
+vmctl
+*.exe
+
+# Test & coverage
+*.out
+coverage.html
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
