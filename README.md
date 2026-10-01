@@ -29,7 +29,7 @@ vmctl list --json
 # 查看虚拟机详情（名称、UUID、Tools 状态、Guest IP 等）
 vmctl info <vm>
 
-# 电源管理
+# 电源管理（start 返回即代表 VM 已加电，不等待 guest 就绪）
 vmctl start <vm> [--nogui]
 vmctl stop <vm> [--hard]
 vmctl suspend <vm>
@@ -48,6 +48,24 @@ vmctl set <vm> --memory 4096 --cpus 4 [--name <new-name>]
 
 # 删除虚拟机及其全部文件（不可恢复）
 vmctl delete <vm>
+
+# 快照管理（revert 会一并恢复快照时的电源状态）
+vmctl snapshot list <vm> [--tree]
+vmctl snapshot create <vm> <name>
+vmctl snapshot delete <vm> <name> [--children]
+vmctl snapshot revert <vm> <name>       # 须已关机
+
+# 在 guest 内执行命令（经 /bin/sh，捕获输出，透传退出码）
+# 需要 VM 已开机且 guest 内装有 VMware Tools
+vmctl exec <vm> -- 'df -h | grep /'
+vmctl exec <vm> -u root -- systemctl restart nginx
+
+# 查看 guest IP（脚本友好，输出裸 IP；需要 Tools）
+vmctl ip <vm> [--wait]
+
+# 通过 SSH 进入 guest（需 guest 开启 sshd）
+vmctl shell <vm> [--user u] [--port 22] [-i key] [--wait] [--dry-run]
+vmctl shell <vm> -- -v                    # -- 之后透传给 ssh
 ```
 
 `<vm>` 支持多种引用方式：
@@ -82,6 +100,6 @@ internal/model     与后端无关的 VM 模型
 
 - [x] M1：骨架 + Driver 接口 + list / info / 电源操作 + JSON 输出
 - [x] M2：create / clone / set / delete
-- [ ] M3：snapshot 全套 + guest 内 exec
+- [x] M3：snapshot 全套 + guest exec + ip / shell
 - [ ] M4：vsphere 后端（govomi）+ profile 配置
 - [ ] M5：shell 补全、体验打磨
