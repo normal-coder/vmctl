@@ -1,0 +1,67 @@
+# vmctl
+
+vmctl 是一个参考 `prlctl` 命令风格设计的 VMware 虚拟机控制 CLI，使用 Go 编写。
+
+首版基于本地 `vmrun`（VMware Fusion / Workstation），架构上通过统一的 Driver 接口预留了
+远程 vSphere 后端（govomi）的扩展位置。
+
+## 构建
+
+```bash
+go build -o bin/vmctl ./cmd/vmctl
+```
+
+## 快速上手
+
+```bash
+# 列出所有虚拟机
+vmctl list
+vmctl list --json
+
+# 查看虚拟机详情（名称、UUID、Tools 状态、Guest IP 等）
+vmctl info <vm>
+
+# 电源管理
+vmctl start <vm> [--nogui]
+vmctl stop <vm> [--hard]
+vmctl suspend <vm>
+vmctl resume <vm>
+vmctl pause <vm>
+vmctl reset <vm> [--hard]
+```
+
+`<vm>` 支持多种引用方式：
+
+- 显示名（不区分大小写）：`vmctl stop my-vm`
+- 名称的唯一子串：`vmctl stop ubuntu`
+- UUID 或 UUID 前缀：`vmctl info 564d1156`
+- vmx 文件路径 / .vmwarevm 目录路径
+
+## 全局选项
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 以 JSON 输出（便于脚本处理） |
+| `--backend` | 后端驱动，默认 `vmrun`（预留 vsphere） |
+| `--vmrun` | 指定 vmrun 路径（默认自动探测） |
+
+环境变量 `VMCTL_VMRUN` 同样可以指定 vmrun 路径。
+
+## 架构
+
+```
+cmd/vmctl          入口
+internal/cli       cobra 命令树
+internal/output    表格 / JSON 渲染
+internal/driver    统一 Driver 接口 + 注册表
+  └── vmrun/       本地 vmrun 驱动（解析 Fusion vmInventory + 调用 vmrun）
+internal/model     与后端无关的 VM 模型
+```
+
+## 路线图
+
+- [x] M1：骨架 + Driver 接口 + list / info / 电源操作 + JSON 输出
+- [ ] M2：create / clone / set / delete
+- [ ] M3：snapshot 全套 + guest 内 exec
+- [ ] M4：vsphere 后端（govomi）+ profile 配置
+- [ ] M5：shell 补全、体验打磨
