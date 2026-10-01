@@ -53,6 +53,18 @@ func (d *Driver) ensurePoweredOff(ctx context.Context, path, action string) erro
 	return nil
 }
 
+// ensureRunning rejects the action unless the VM is powered on.
+func (d *Driver) ensureRunning(ctx context.Context, path, action string) error {
+	running, err := d.listRunning(ctx)
+	if err != nil {
+		return err
+	}
+	if !running[absPath(path)] {
+		return fmt.Errorf("cannot %s while the VM is not running: power it on first", action)
+	}
+	return nil
+}
+
 // cloneDestPath computes the destination vmx path for a clone.
 func cloneDestPath(src string, opts driver.CloneOptions) string {
 	if opts.Path != "" {

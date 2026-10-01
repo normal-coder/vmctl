@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/model"
@@ -224,6 +225,13 @@ func parseGuestIP(out string) string {
 }
 
 // Start implements driver.Driver.
+//
+// vmrun start blocks until the guest reports ready (Tools running),
+// which can take minutes — or never finish — on guests without
+// VMware Tools. vmrun is therefore launched in the background and
+// Start returns as soon as the VM shows up as powered on, matching
+// prlctl's semantics. The detached vmrun keeps waiting for guest
+// readiness on its own and exits once the guest settles.
 func (d *Driver) Start(ctx context.Context, ref string, opts driver.StartOptions) error {
 	path, err := d.resolve(ref)
 	if err != nil {
@@ -233,8 +241,41 @@ func (d *Driver) Start(ctx context.Context, ref string, opts driver.StartOptions
 	if opts.NoGUI {
 		mode = "nogui"
 	}
-	_, err = d.runner.run(ctx, "start", path, mode)
-	return err
+	go func() {
+		bg, cancel := context.WithTimeout(context.Background(), startBackgroundTimeout)
+		defer cancel()
+		_, _ = d.runner.run(bg, "start", path, mode)
+	}()
+	return d.waitPoweredOn(ctx, path)
+}
+
+// startBackgroundTimeout bounds the detached vmrun start process.
+const startBackgroundTimeout = 10 * time.Minute
+
+// powerOnTimeout is how long Start waits for the VM to appear in
+// `vmrun list` before giving up.
+const powerOnTimeout = 30 * time.Second
+
+// waitPoweredOn polls `vmrun list` until the VM is running.
+func (d *Driver) waitPoweredOn(ctx context.Context, path string) error {
+	deadline := time.Now().Add(powerOnTimeout)
+	for {
+		running, err := d.listRunning(ctx)
+		if err != nil {
+			return err
+		}
+		if running[absPath(path)] {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timed out waiting for %q to power on", path)
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(250 * time.Millisecond):
+		}
+	}
 }
 
 // Stop implements driver.Driver.

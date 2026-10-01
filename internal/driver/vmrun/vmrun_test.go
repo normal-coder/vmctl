@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/model"
@@ -49,6 +50,33 @@ func (f *fakeExec) lastArgs() []string {
 		return nil
 	}
 	return stripHostType(f.calls[len(f.calls)-1])
+}
+
+// findArgs returns the args of the most recent call whose command
+// matches cmd, or nil. It tolerates the async start goroutine.
+func (f *fakeExec) findArgs(cmd string) []string {
+	for i := len(f.calls) - 1; i >= 0; i-- {
+		if a := stripHostType(f.calls[i]); len(a) > 0 && a[0] == cmd {
+			return a
+		}
+	}
+	return nil
+}
+
+// waitArgsLike polls until a call exactly matching want appears
+// (needed because start runs in a background goroutine).
+func (f *fakeExec) waitArgsLike(want []string) []string {
+	wantStr := strings.Join(want, " ")
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		for _, c := range f.calls {
+			if a := stripHostType(c); strings.Join(a, " ") == wantStr {
+				return a
+			}
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	return nil
 }
 
 // newTestEnv builds a temp inventory + vmx files and a driver wired to
@@ -358,7 +386,7 @@ func TestPowerOps(t *testing.T) {
 			t.Errorf("%s: %v", tt.name, err)
 			continue
 		}
-		got := fake.lastArgs()
+		got := fake.waitArgsLike(tt.want)
 		if strings.Join(got, " ") != strings.Join(tt.want, " ") {
 			t.Errorf("%s: got args %q, want %q", tt.name, got, tt.want)
 		}
