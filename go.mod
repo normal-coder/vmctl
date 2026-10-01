@@ -1,3 +1,3 @@
-module github.com/normal-coder/vmctl
+module gitee.com/normalcoder/vmctl
 
 go 1.26.1
