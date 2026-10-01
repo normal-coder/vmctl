@@ -36,6 +36,18 @@ vmctl suspend <vm>
 vmctl resume <vm>
 vmctl pause <vm>
 vmctl reset <vm> [--hard]
+
+# 克隆（默认 linked clone，--full 为完整拷贝；源须已关机）
+vmctl clone <vm> --name <new-name> [--full] [--snapshot <name>] [--path <dest>]
+
+# 从现有 VM 派生新 VM（vmrun 后端不支持从零创建裸 VM）
+vmctl create <name> --from <vm> [--memory 4096] [--cpus 4] [--full]
+
+# 修改配置（须已关机）
+vmctl set <vm> --memory 4096 --cpus 4 [--name <new-name>]
+
+# 删除虚拟机及其全部文件（不可恢复）
+vmctl delete <vm>
 ```
 
 `<vm>` 支持多种引用方式：
@@ -69,7 +81,7 @@ internal/model     与后端无关的 VM 模型
 ## 路线图
 
 - [x] M1：骨架 + Driver 接口 + list / info / 电源操作 + JSON 输出
-- [ ] M2：create / clone / set / delete
+- [x] M2：create / clone / set / delete
 - [ ] M3：snapshot 全套 + guest 内 exec
 - [ ] M4：vsphere 后端（govomi）+ profile 配置
 - [ ] M5：shell 补全、体验打磨
