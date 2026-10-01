@@ -72,6 +72,16 @@ func PrintOK(w io.Writer, action, name string, asJSON bool) error {
 	return err
 }
 
+// PrintCreated confirms a command that produced a new VM, including
+// the path it was created at.
+func PrintCreated(w io.Writer, action, name, path string, asJSON bool) error {
+	if asJSON {
+		return writeJSON(w, map[string]string{"action": action, "vm": name, "result": "ok", "path": path})
+	}
+	_, err := fmt.Fprintf(w, "%s %s: ok\n  -> %s\n", action, name, path)
+	return err
+}
+
 func writeJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
