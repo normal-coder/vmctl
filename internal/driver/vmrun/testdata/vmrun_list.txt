@@ -1,0 +1,2 @@
+Total running VMs: 1
+/Users/test/VM/demo-one.vmwarevm/demo-one.vmx
