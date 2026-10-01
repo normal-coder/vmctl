@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -80,6 +81,42 @@ func PrintCreated(w io.Writer, action, name, path string, asJSON bool) error {
 	}
 	_, err := fmt.Fprintf(w, "%s %s: ok\n  -> %s\n", action, name, path)
 	return err
+}
+
+// PrintSnapshots renders a snapshot listing; nested entries are
+// indented by Depth.
+func PrintSnapshots(w io.Writer, ref string, snaps []model.Snapshot, asJSON bool) error {
+	if asJSON {
+		return writeJSON(w, map[string]any{"vm": ref, "snapshots": snaps})
+	}
+	if len(snaps) == 0 {
+		_, err := fmt.Fprintf(w, "No snapshots for %s.\n", ref)
+		return err
+	}
+	t := newTable()
+	t.AppendHeader(table.Row{"#", "NAME"})
+	for i, s := range snaps {
+		t.AppendRow(table.Row{i + 1, strings.Repeat("  ", s.Depth) + s.Name})
+	}
+	_, err := fmt.Fprintln(w, t.Render())
+	return err
+}
+
+// PrintIP prints a guest IP as a bare line (script friendly) or JSON.
+func PrintIP(w io.Writer, ref, ip string, asJSON bool) error {
+	if asJSON {
+		return writeJSON(w, map[string]string{"vm": ref, "ip": ip})
+	}
+	_, err := fmt.Fprintln(w, ip)
+	return err
+}
+
+// PrintExec renders an exec result as JSON. Text mode passes the
+// captured guest output through unchanged, so it has no printer here.
+func PrintExec(w io.Writer, ref, script, out string, code int) error {
+	return writeJSON(w, map[string]any{
+		"vm": ref, "command": script, "output": out, "exit_code": code,
+	})
 }
 
 func writeJSON(w io.Writer, v any) error {

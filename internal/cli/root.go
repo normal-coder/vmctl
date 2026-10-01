@@ -58,6 +58,10 @@ func NewRootCmd() *cobra.Command {
 		newCreateCmd(),
 		newSetCmd(),
 		newDeleteCmd(),
+		newSnapshotCmd(),
+		newExecCmd(),
+		newShellCmd(),
+		newIPCmd(),
 		newVersionCmd(),
 	)
 	return root
