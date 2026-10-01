@@ -42,6 +42,49 @@ type ResetOptions struct {
 	Hard bool
 }
 
+// CloneOptions controls VM cloning.
+type CloneOptions struct {
+	// Name is the new VM's display name (required).
+	Name string
+	// Full makes an independent copy. Default (with Full=false) is a
+	// linked clone, which is fast but keeps a base snapshot on the source.
+	Full bool
+	// Snapshot selects the base snapshot (linked/full clones).
+	Snapshot string
+	// Path overrides the destination: a .vmx file or a bundle directory.
+	// Default: alongside the source, as <name>.vmwarevm/<name>.vmx.
+	Path string
+}
+
+// CreateOptions provisions a new VM.
+type CreateOptions struct {
+	// Name is the new VM's display name (required).
+	Name string
+	// From is the source VM ref to clone from. Required by backends
+	// that cannot create a bare VM (vmrun).
+	From     string
+	Full     bool
+	Snapshot string
+	Path     string
+	// MemoryMB and CPUs optionally override the configuration after
+	// cloning (0 = keep source values).
+	MemoryMB int
+	CPUs     int
+}
+
+// SetOptions describes configuration changes; nil fields are left
+// untouched.
+type SetOptions struct {
+	Name     *string
+	MemoryMB *int
+	CPUs     *int
+}
+
+// Empty reports whether no change was requested.
+func (o SetOptions) Empty() bool {
+	return o.Name == nil && o.MemoryMB == nil && o.CPUs == nil
+}
+
 // Driver is the unified backend interface.
 type Driver interface {
 	// Name returns the backend identifier ("vmrun", "vsphere", ...).
@@ -62,6 +105,16 @@ type Driver interface {
 	Resume(ctx context.Context, ref string) error
 	Pause(ctx context.Context, ref string) error
 	Reset(ctx context.Context, ref string, opts ResetOptions) error
+
+	// Lifecycle operations.
+	// Clone copies the VM matching ref and returns the new vmx path.
+	Clone(ctx context.Context, ref string, opts CloneOptions) (string, error)
+	// Create provisions a new VM and returns the new vmx path.
+	Create(ctx context.Context, opts CreateOptions) (string, error)
+	// Set applies configuration changes (powered-off VMs only).
+	Set(ctx context.Context, ref string, opts SetOptions) error
+	// Delete permanently removes the VM and its files.
+	Delete(ctx context.Context, ref string) error
 }
 
 // Options carries backend construction settings.
