@@ -29,13 +29,20 @@ var zhCatalog = map[string]string{
 	"err.resolve.ambiguousNames": "引用 %q 有歧义，匹配到：%s",
 
 	// vsphere backend
-	"err.vsphere.endpoint":     "vsphere 后端缺少 endpoint，请在 profile 中配置",
-	"err.vsphere.user":         "vsphere 后端缺少登录用户名",
-	"err.vsphere.connect":      "连接 %s 失败：%s",
-	"err.vsphere.notRunning":   "虚拟机未处于运行状态",
-	"err.vsphere.stopTimeout":  "等待虚拟机关机超时（60 秒），客户机可能未安装或未运行 VMware Tools",
-	"err.vsphere.offForResume": "虚拟机已关机，无法恢复，请改用 start",
-	"err.vsphere.noPause":      "vSphere 没有 pause 操作，可用 suspend 将虚拟机挂起到磁盘",
+	"err.vsphere.endpoint":         "vsphere 后端缺少 endpoint，请在 profile 中配置",
+	"err.vsphere.user":             "vsphere 后端缺少登录用户名",
+	"err.vsphere.connect":          "连接 %s 失败：%s",
+	"err.vsphere.notRunning":       "虚拟机未处于运行状态",
+	"err.vsphere.stopTimeout":      "等待虚拟机关机超时（60 秒），客户机可能未安装或未运行 VMware Tools",
+	"err.vsphere.offForResume":     "虚拟机已关机，无法恢复，请改用 start",
+	"err.vsphere.noPause":          "vSphere 没有 pause 操作，可用 suspend 将虚拟机挂起到磁盘",
+	"err.vsphere.mustBeOff":        "虚拟机必须处于关机状态",
+	"err.vsphere.createNoFrom":     "vsphere 后端无法创建裸虚拟机，请用 --from 指定源虚拟机",
+	"err.vsphere.linkedNoSnapshot": "链接克隆需要基线快照，但源虚拟机 %q 没有任何快照",
+	"err.vsphere.cloneFolder":      "找不到克隆目标文件夹：%s",
+	"err.vsphere.cloneNotFolder":   "克隆目标不是文件夹：%s",
+	"err.vsphere.cloneResult":      "克隆任务未返回新虚拟机",
+	"err.clone.name":               "必须指定新虚拟机名称",
 
 	// errors
 	"err.prefix":       "错误",

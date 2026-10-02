@@ -29,13 +29,20 @@ var enCatalog = map[string]string{
 	"err.resolve.ambiguousNames": "ambiguous reference %q matches: %s",
 
 	// vsphere backend
-	"err.vsphere.endpoint":     "vsphere backend requires an endpoint; configure it in a profile",
-	"err.vsphere.user":         "vsphere backend requires a user name",
-	"err.vsphere.connect":      "failed to connect to %s: %s",
-	"err.vsphere.notRunning":   "virtual machine is not powered on",
-	"err.vsphere.stopTimeout":  "timed out waiting for the VM to power off (60s); VMware Tools may be missing or not running",
-	"err.vsphere.offForResume": "virtual machine is powered off; use start instead",
-	"err.vsphere.noPause":      "vSphere has no pause operation; use suspend to suspend to disk",
+	"err.vsphere.endpoint":         "vsphere backend requires an endpoint; configure it in a profile",
+	"err.vsphere.user":             "vsphere backend requires a user name",
+	"err.vsphere.connect":          "failed to connect to %s: %s",
+	"err.vsphere.notRunning":       "virtual machine is not powered on",
+	"err.vsphere.stopTimeout":      "timed out waiting for the VM to power off (60s); VMware Tools may be missing or not running",
+	"err.vsphere.offForResume":     "virtual machine is powered off; use start instead",
+	"err.vsphere.noPause":          "vSphere has no pause operation; use suspend to suspend to disk",
+	"err.vsphere.mustBeOff":        "virtual machine must be powered off",
+	"err.vsphere.createNoFrom":     "the vsphere backend cannot create a bare VM; pass --from to clone an existing one",
+	"err.vsphere.linkedNoSnapshot": "linked clone needs a base snapshot, but source VM %q has none",
+	"err.vsphere.cloneFolder":      "clone target folder not found: %s",
+	"err.vsphere.cloneNotFolder":   "clone target is not a folder: %s",
+	"err.vsphere.cloneResult":      "clone task returned no new VM",
+	"err.clone.name":               "a name for the new virtual machine is required",
 
 	// errors
 	"err.prefix":       "Error",
