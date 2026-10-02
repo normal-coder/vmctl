@@ -30,7 +30,7 @@ func (p powerCommand) cmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   p.use,
 		Short: p.short,
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {

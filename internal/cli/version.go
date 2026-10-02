@@ -12,7 +12,7 @@ func newVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: i18n.T("cmd.version.short"),
-		Args:  cobra.NoArgs,
+		Args:  noArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(cmd.OutOrStdout(), "vmctl %s\n", Version)
 		},

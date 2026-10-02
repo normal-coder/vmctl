@@ -2,15 +2,12 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/i18n"
 	// Register backends.
 	_ "gitee.com/normalcoder/vmctl/internal/driver/vmrun"
@@ -34,17 +31,26 @@ var (
 	rootFlags *pflag.FlagSet
 )
 
-// Execute runs the root command and maps errors to exit codes.
+// Execute runs the root command and maps errors to exit codes:
+// exitCodeError passes its code through silently, usage errors exit 2
+// with the command's usage, everything else exits 1.
 func Execute() {
 	// The command tree bakes translated help strings at build time, so
 	// the language must be resolved before NewRootCmd.
 	i18n.SetLang(i18n.DetectLang(os.Args))
 	root := NewRootCmd()
-	if err := root.Execute(); err != nil {
-		err = friendlyError(err)
-		fmt.Fprintln(os.Stderr, i18n.T("err.prefix")+":", err)
-		os.Exit(1)
+	cmd, err := root.ExecuteC()
+	if err == nil {
+		return
 	}
+	plan := planExit(err)
+	if plan.message != "" {
+		fmt.Fprintln(os.Stderr, i18n.T("err.prefix")+":", plan.message)
+		if plan.showUsage {
+			fmt.Fprint(os.Stderr, cmd.UsageString())
+		}
+	}
+	os.Exit(plan.code)
 }
 
 // NewRootCmd builds the vmctl command tree.
@@ -68,6 +74,11 @@ func NewRootCmd() *cobra.Command {
 	pf.StringVar(&flagLang, "lang", "", i18n.T("flag.lang"))
 	rootFlags = pf
 
+	// Unknown or malformed flags are usage errors (exit 2).
+	root.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
+		return usageError{err}
+	})
+
 	root.AddCommand(
 		newListCmd(),
 		newInfoCmd(),
@@ -90,21 +101,4 @@ func NewRootCmd() *cobra.Command {
 	registerCompletions(root)
 	localizeCompletion(root)
 	return root
-}
-
-// friendlyError renders ErrNotSupported with the current language,
-// stripping the English sentinel text the driver wraps in.
-func friendlyError(err error) error {
-	if !errors.Is(err, driver.ErrNotSupported) {
-		return err
-	}
-	// Drivers wrap as fmt.Errorf("%w: <detail>", ErrNotSupported).
-	detail := strings.TrimPrefix(err.Error(), driver.ErrNotSupported.Error()+": ")
-	if detail == err.Error() {
-		detail = ""
-	}
-	if detail == "" {
-		return errors.New(i18n.T("err.notSupported"))
-	}
-	return fmt.Errorf("%s: %s", i18n.T("err.notSupported"), detail)
 }

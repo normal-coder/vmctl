@@ -29,7 +29,7 @@ func newSnapshotListCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "list <vm>",
 		Short: i18n.T("cmd.snapshot.list.short"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -50,7 +50,7 @@ func newSnapshotCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create <vm> <name>",
 		Short: i18n.T("cmd.snapshot.create.short"),
-		Args:  cobra.ExactArgs(2),
+		Args:  exactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -70,7 +70,7 @@ func newSnapshotDeleteCmd() *cobra.Command {
 		Use:   "delete <vm> <name>",
 		Short: i18n.T("cmd.snapshot.delete.short"),
 		Long:  i18n.T("cmd.snapshot.delete.long"),
-		Args:  cobra.ExactArgs(2),
+		Args:  exactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -90,7 +90,7 @@ func newSnapshotRevertCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "revert <vm> <name>",
 		Short: i18n.T("cmd.snapshot.revert.short"),
-		Args:  cobra.ExactArgs(2),
+		Args:  exactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {

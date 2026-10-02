@@ -22,7 +22,7 @@ func newCloneCmd() *cobra.Command {
 		Use:   "clone <vm>",
 		Short: i18n.T("cmd.clone.short"),
 		Long:  i18n.T("cmd.clone.long"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -67,7 +67,7 @@ func newCreateCmd() *cobra.Command {
 		Use:   "create <name>",
 		Short: i18n.T("cmd.create.short"),
 		Long:  i18n.T("cmd.create.long"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -106,7 +106,7 @@ func newSetCmd() *cobra.Command {
 		Use:   "set <vm>",
 		Short: i18n.T("cmd.set.short"),
 		Long:  i18n.T("cmd.set.long"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := driver.SetOptions{}
 			if cmd.Flags().Changed("name") {
@@ -142,7 +142,7 @@ func newDeleteCmd() *cobra.Command {
 		Use:   "delete <vm>",
 		Short: i18n.T("cmd.delete.short"),
 		Long:  i18n.T("cmd.delete.long"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {

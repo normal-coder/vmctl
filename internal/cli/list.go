@@ -14,7 +14,7 @@ func newListCmd() *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   i18n.T("cmd.list.short"),
-		Args:    cobra.NoArgs,
+		Args:    noArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -33,7 +33,7 @@ func newInfoCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "info <vm>",
 		Short: i18n.T("cmd.info.short"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {

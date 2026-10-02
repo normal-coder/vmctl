@@ -21,7 +21,7 @@ func newExecCmd() *cobra.Command {
 		Use:   "exec <vm> -- <command>",
 		Short: i18n.T("cmd.exec.short"),
 		Long:  i18n.T("cmd.exec.long"),
-		Args:  cobra.MinimumNArgs(2),
+		Args:  minimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -47,7 +47,7 @@ func newExecCmd() *cobra.Command {
 				if code < 0 {
 					code = 1
 				}
-				os.Exit(code)
+				return exitCodeError(code)
 			}
 			return nil
 		},
@@ -76,7 +76,7 @@ func newShellCmd() *cobra.Command {
 				dash = len(args)
 			}
 			if dash != 1 {
-				return fmt.Errorf(i18n.T("err.shell.args"), dash)
+				return usageError{fmt.Errorf(i18n.T("err.shell.args"), dash)}
 			}
 			return nil
 		},
@@ -122,7 +122,7 @@ func newIPCmd() *cobra.Command {
 		Use:   "ip <vm>",
 		Short: i18n.T("cmd.ip.short"),
 		Long:  i18n.T("cmd.ip.long"),
-		Args:  cobra.ExactArgs(1),
+		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -163,7 +163,11 @@ func runSSH(bin string, args []string) error {
 	}
 	var ee *exec.ExitError
 	if errors.As(err, &ee) {
-		os.Exit(ee.ExitCode())
+		code := ee.ExitCode()
+		if code < 0 {
+			code = 1
+		}
+		return exitCodeError(code)
 	}
 	return fmt.Errorf("%s: %w", bin, err)
 }
