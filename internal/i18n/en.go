@@ -12,6 +12,15 @@ var enCatalog = map[string]string{
 	"flag.vmrun":   "path to the vmrun binary (default: auto-detect)",
 	"flag.backend": "backend driver to use",
 	"flag.lang":    "message language: zh or en (default: zh)",
+	"flag.profile": "configuration profile to use (default: the file's default)",
+
+	// config / profile
+	"err.config.notExist":      "config file not found: %s",
+	"err.config.read":          "failed to read config file: %s",
+	"err.config.parse":         "failed to parse config file: %s",
+	"err.config.profile":       "profile %q not found; available: %s",
+	"err.config.profileNoList": "profile %q not found and no profiles are defined",
+	"err.config.envEmpty":      "environment variable %s is unset or empty; cannot read the password",
 
 	// errors
 	"err.prefix":       "Error",

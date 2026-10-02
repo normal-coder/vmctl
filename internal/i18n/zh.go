@@ -12,6 +12,15 @@ var zhCatalog = map[string]string{
 	"flag.vmrun":   "vmrun 可执行文件路径（默认自动探测）",
 	"flag.backend": "使用的后端驱动",
 	"flag.lang":    "界面语言：zh 或 en（默认 zh）",
+	"flag.profile": "使用的配置 profile（缺省取配置文件的 default）",
+
+	// config / profile
+	"err.config.notExist":      "找不到配置文件：%s",
+	"err.config.read":          "读取配置文件失败：%s",
+	"err.config.parse":         "解析配置文件失败：%s",
+	"err.config.profile":       "找不到 profile %q，可用的有：%s",
+	"err.config.profileNoList": "找不到 profile %q，且配置中未定义任何 profile",
+	"err.config.envEmpty":      "环境变量 %s 未设置或为空，无法读取密码",
 
 	// errors
 	"err.prefix":       "错误",

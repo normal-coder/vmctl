@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/i18n"
@@ -23,6 +24,12 @@ var (
 	flagVMRun   string
 	flagBackend string
 	flagLang    string
+	flagProfile string
+
+	// rootFlags is the root persistent flag set, captured by
+	// NewRootCmd so openDriver can consult Changed and tell explicit
+	// CLI flags from defaults.
+	rootFlags *pflag.FlagSet
 )
 
 // Execute runs the root command and maps errors to exit codes.
@@ -52,9 +59,11 @@ func NewRootCmd() *cobra.Command {
 	pf.BoolVar(&flagJSON, "json", false, i18n.T("flag.json"))
 	pf.StringVar(&flagVMRun, "vmrun", "", i18n.T("flag.vmrun"))
 	pf.StringVar(&flagBackend, "backend", "vmrun", i18n.T("flag.backend"))
+	pf.StringVar(&flagProfile, "profile", "", i18n.T("flag.profile"))
 	// The effective language comes from DetectLang's pre-scan; this
 	// flag only makes --lang visible to cobra and to --help.
 	pf.StringVar(&flagLang, "lang", "", i18n.T("flag.lang"))
+	rootFlags = pf
 
 	root.AddCommand(
 		newListCmd(),
@@ -76,11 +85,6 @@ func NewRootCmd() *cobra.Command {
 		newVersionCmd(),
 	)
 	return root
-}
-
-// openDriver constructs the selected backend.
-func openDriver() (driver.Driver, error) {
-	return driver.Open(flagBackend, driver.Options{VMRunPath: flagVMRun})
 }
 
 // friendlyError renders ErrNotSupported with the current language,
