@@ -37,6 +37,10 @@ type Driver struct {
 	once    sync.Once
 	session *govmomi.Client
 	connErr error
+
+	// guest overrides the guest-operations implementation (tests
+	// inject a fake; vcsim only runs guest programs in container VMs).
+	guest guestOps
 }
 
 // New builds a vsphere driver. Only the options are validated here;

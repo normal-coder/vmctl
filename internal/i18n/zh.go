@@ -43,6 +43,8 @@ var zhCatalog = map[string]string{
 	"err.vsphere.cloneNotFolder":   "克隆目标不是文件夹：%s",
 	"err.vsphere.cloneResult":      "克隆任务未返回新虚拟机",
 	"err.clone.name":               "必须指定新虚拟机名称",
+	"err.vsphere.noIP":             "客户机尚未上报 IP 地址（VMware Tools 是否在运行？）",
+	"err.exec.empty":               "命令不能为空",
 
 	// errors
 	"err.prefix":       "错误",

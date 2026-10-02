@@ -43,6 +43,8 @@ var enCatalog = map[string]string{
 	"err.vsphere.cloneNotFolder":   "clone target is not a folder: %s",
 	"err.vsphere.cloneResult":      "clone task returned no new VM",
 	"err.clone.name":               "a name for the new virtual machine is required",
+	"err.vsphere.noIP":             "guest has not reported an IP address yet (is VMware Tools running?)",
+	"err.exec.empty":               "command must not be empty",
 
 	// errors
 	"err.prefix":       "Error",
