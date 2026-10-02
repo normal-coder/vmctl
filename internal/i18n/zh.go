@@ -22,6 +22,21 @@ var zhCatalog = map[string]string{
 	"err.config.profileNoList": "找不到 profile %q，且配置中未定义任何 profile",
 	"err.config.envEmpty":      "环境变量 %s 未设置或为空，无法读取密码",
 
+	// resolve (shared reference resolution wording)
+	"err.resolve.empty":          "引用不能为空",
+	"err.resolve.notFound":       "找不到虚拟机 %q（可用：%s）",
+	"err.resolve.ambiguous":      "引用 %q 有歧义，匹配到 %d 台虚拟机",
+	"err.resolve.ambiguousNames": "引用 %q 有歧义，匹配到：%s",
+
+	// vsphere backend
+	"err.vsphere.endpoint":     "vsphere 后端缺少 endpoint，请在 profile 中配置",
+	"err.vsphere.user":         "vsphere 后端缺少登录用户名",
+	"err.vsphere.connect":      "连接 %s 失败：%s",
+	"err.vsphere.notRunning":   "虚拟机未处于运行状态",
+	"err.vsphere.stopTimeout":  "等待虚拟机关机超时（60 秒），客户机可能未安装或未运行 VMware Tools",
+	"err.vsphere.offForResume": "虚拟机已关机，无法恢复，请改用 start",
+	"err.vsphere.noPause":      "vSphere 没有 pause 操作，可用 suspend 将虚拟机挂起到磁盘",
+
 	// errors
 	"err.prefix":       "错误",
 	"err.notSupported": "此操作该后端不支持",

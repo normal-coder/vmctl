@@ -150,10 +150,19 @@ type Driver interface {
 	GuestIP(ctx context.Context, ref string, wait bool) (string, error)
 }
 
-// Options carries backend construction settings.
+// Options carries backend construction settings. vmrun reads only
+// VMRunPath; vsphere reads Endpoint/User/Password/Insecure. Fields a
+// backend does not use are ignored.
 type Options struct {
 	// VMRunPath overrides auto-detection of the vmrun binary ("" = detect).
 	VMRunPath string
+	// Endpoint is the vCenter/ESXi URL, e.g. https://vcenter.example.com.
+	Endpoint string
+	// User and Password authenticate against the vSphere API.
+	User     string
+	Password string
+	// Insecure skips TLS certificate verification.
+	Insecure bool
 }
 
 // Factory builds a Driver from options.

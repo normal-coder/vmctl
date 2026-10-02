@@ -22,6 +22,21 @@ var enCatalog = map[string]string{
 	"err.config.profileNoList": "profile %q not found and no profiles are defined",
 	"err.config.envEmpty":      "environment variable %s is unset or empty; cannot read the password",
 
+	// resolve (shared reference resolution wording)
+	"err.resolve.empty":          "reference must not be empty",
+	"err.resolve.notFound":       "virtual machine %q not found (known: %s)",
+	"err.resolve.ambiguous":      "ambiguous reference %q matches %d VMs",
+	"err.resolve.ambiguousNames": "ambiguous reference %q matches: %s",
+
+	// vsphere backend
+	"err.vsphere.endpoint":     "vsphere backend requires an endpoint; configure it in a profile",
+	"err.vsphere.user":         "vsphere backend requires a user name",
+	"err.vsphere.connect":      "failed to connect to %s: %s",
+	"err.vsphere.notRunning":   "virtual machine is not powered on",
+	"err.vsphere.stopTimeout":  "timed out waiting for the VM to power off (60s); VMware Tools may be missing or not running",
+	"err.vsphere.offForResume": "virtual machine is powered off; use start instead",
+	"err.vsphere.noPause":      "vSphere has no pause operation; use suspend to suspend to disk",
+
 	// errors
 	"err.prefix":       "Error",
 	"err.notSupported": "operation not supported by this backend",

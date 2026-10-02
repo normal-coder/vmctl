@@ -101,5 +101,11 @@ func openDriver() (driver.Driver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return driver.Open(s.Backend, driver.Options{VMRunPath: s.VMRunPath})
+	return driver.Open(s.Backend, driver.Options{
+		VMRunPath: s.VMRunPath,
+		Endpoint:  s.Endpoint,
+		User:      s.User,
+		Password:  s.Password,
+		Insecure:  s.Insecure,
+	})
 }

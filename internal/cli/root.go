@@ -12,8 +12,9 @@ import (
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/i18n"
-	// Register local backends.
+	// Register backends.
 	_ "gitee.com/normalcoder/vmctl/internal/driver/vmrun"
+	_ "gitee.com/normalcoder/vmctl/internal/driver/vsphere"
 )
 
 // Version is stamped via -ldflags at build time.
