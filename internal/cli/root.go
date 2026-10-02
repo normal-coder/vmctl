@@ -23,6 +23,7 @@ var Version = "dev"
 var (
 	flagJSON    bool
 	flagVMRun   string
+	flagVMCli   string
 	flagBackend string
 	flagLang    string
 	flagProfile string
@@ -59,6 +60,7 @@ func NewRootCmd() *cobra.Command {
 	pf := root.PersistentFlags()
 	pf.BoolVar(&flagJSON, "json", false, i18n.T("flag.json"))
 	pf.StringVar(&flagVMRun, "vmrun", "", i18n.T("flag.vmrun"))
+	pf.StringVar(&flagVMCli, "vmcli", "", i18n.T("flag.vmcli"))
 	pf.StringVar(&flagBackend, "backend", "vmrun", i18n.T("flag.backend"))
 	pf.StringVar(&flagProfile, "profile", "", i18n.T("flag.profile"))
 	// The effective language comes from DetectLang's pre-scan; this

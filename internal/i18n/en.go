@@ -10,6 +10,7 @@ var enCatalog = map[string]string{
 	// global flags
 	"flag.json":    "output as JSON",
 	"flag.vmrun":   "path to the vmrun binary (default: auto-detect)",
+	"flag.vmcli":   "path to the vmcli binary (default: auto-detect; requires Fusion 13.5+)",
 	"flag.backend": "backend driver to use",
 	"flag.lang":    "message language: zh or en (default: zh)",
 	"flag.profile": "configuration profile to use (default: the file's default)",
@@ -27,6 +28,9 @@ var enCatalog = map[string]string{
 	"err.resolve.notFound":       "virtual machine %q not found (known: %s)",
 	"err.resolve.ambiguous":      "ambiguous reference %q matches %d VMs",
 	"err.resolve.ambiguousNames": "ambiguous reference %q matches: %s",
+
+	// vmcli (snapshot uid fallback)
+	"err.vmcli.notFound": "vmcli not found (requires VMware Fusion 13.5+; set --vmcli or VMCTL_VMCLI)",
 
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere backend requires an endpoint; configure it in a profile",
@@ -96,15 +100,18 @@ backend (Fusion provides no createVM command).`,
 	"cmd.delete.long":  "Permanently delete a virtual machine, including all files on disk. This cannot be undone.",
 
 	// snapshot
-	"cmd.snapshot.short":        "Manage virtual machine snapshots",
-	"cmd.snapshot.long":         "Work with snapshots: list, create, delete and revert.\nReverting requires the VM to be powered off.",
-	"cmd.snapshot.list.short":   "List snapshots of a virtual machine",
-	"cmd.snapshot.create.short": "Create a snapshot",
-	"cmd.snapshot.delete.short": "Delete a snapshot",
-	"cmd.snapshot.delete.long":  "Delete a snapshot. Child snapshots are re-parented by\ndefault; pass --children to delete them as well.",
-	"cmd.snapshot.revert.short": "Revert a virtual machine to a snapshot",
-	"flag.tree":                 "show snapshot hierarchy",
-	"flag.children":             "also delete child snapshots",
+	"cmd.snapshot.short":            "Manage virtual machine snapshots",
+	"cmd.snapshot.long":             "Work with snapshots: list, create, delete and revert.\nReverting requires the VM to be powered off.",
+	"cmd.snapshot.list.short":       "List snapshots of a virtual machine",
+	"cmd.snapshot.create.short":     "Create a snapshot",
+	"cmd.snapshot.delete.short":     "Delete a snapshot",
+	"cmd.snapshot.delete.long":      "Delete a snapshot. Child snapshots are re-parented by\ndefault; pass --children to delete them as well.",
+	"cmd.snapshot.revert.short":     "Revert a virtual machine to a snapshot",
+	"flag.tree":                     "show snapshot hierarchy",
+	"flag.children":                 "also delete child snapshots",
+	"err.snapshot.needName":         "a snapshot name is required",
+	"err.snapshot.ambiguous":        "snapshot name %q is ambiguous, candidates: %s (pick one with <name#uid>)",
+	"err.snapshot.ambiguousNoVmcli": "snapshot name %q is ambiguous and vmcli cannot list candidates;\nset --vmcli to enable <name#uid> references",
 
 	// exec
 	"cmd.exec.short": "Run a command inside the guest OS",

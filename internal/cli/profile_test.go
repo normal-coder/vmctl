@@ -17,6 +17,7 @@ func TestResolveSettingsPriority(t *testing.T) {
 				User:      "admin@vsphere.local",
 				Password:  "s3cret",
 				VMRunPath: "/profile/vmrun",
+				VMCliPath: "/profile/vmcli",
 				Insecure:  true,
 			},
 			"local": {Backend: "vmrun"},
@@ -34,7 +35,7 @@ func TestResolveSettingsPriority(t *testing.T) {
 			want: settings{
 				Backend: "vsphere", Endpoint: "https://vc.example.com",
 				User: "admin@vsphere.local", Password: "s3cret",
-				VMRunPath: "/profile/vmrun", Insecure: true,
+				VMRunPath: "/profile/vmrun", VMCliPath: "/profile/vmcli", Insecure: true,
 			},
 		},
 		{
@@ -49,7 +50,7 @@ func TestResolveSettingsPriority(t *testing.T) {
 			want: settings{
 				Backend: "vmrun", Endpoint: "https://vc.example.com",
 				User: "admin@vsphere.local", Password: "s3cret",
-				VMRunPath: "/profile/vmrun", Insecure: true,
+				VMRunPath: "/profile/vmrun", VMCliPath: "/profile/vmcli", Insecure: true,
 			},
 		},
 		{
@@ -58,7 +59,7 @@ func TestResolveSettingsPriority(t *testing.T) {
 			want: settings{
 				Backend: "vsphere", Endpoint: "https://vc.example.com",
 				User: "admin@vsphere.local", Password: "s3cret",
-				VMRunPath: "/profile/vmrun", Insecure: true,
+				VMRunPath: "/profile/vmrun", VMCliPath: "/profile/vmcli", Insecure: true,
 			},
 		},
 		{
@@ -67,7 +68,25 @@ func TestResolveSettingsPriority(t *testing.T) {
 			want: settings{
 				Backend: "vsphere", Endpoint: "https://vc.example.com",
 				User: "admin@vsphere.local", Password: "s3cret",
-				VMRunPath: "/cli/vmrun", Insecure: true,
+				VMRunPath: "/cli/vmrun", VMCliPath: "/profile/vmcli", Insecure: true,
+			},
+		},
+		{
+			name: "explicit vmcli flag beats profile",
+			in:   mergeInput{VMCliPath: "/cli/vmcli", VMCliSet: true},
+			want: settings{
+				Backend: "vsphere", Endpoint: "https://vc.example.com",
+				User: "admin@vsphere.local", Password: "s3cret",
+				VMRunPath: "/profile/vmrun", VMCliPath: "/cli/vmcli", Insecure: true,
+			},
+		},
+		{
+			name: "vmcli flag without Changed does not beat profile",
+			in:   mergeInput{VMCliPath: "/cli/vmcli"}, // default value, not set
+			want: settings{
+				Backend: "vsphere", Endpoint: "https://vc.example.com",
+				User: "admin@vsphere.local", Password: "s3cret",
+				VMRunPath: "/profile/vmrun", VMCliPath: "/profile/vmcli", Insecure: true,
 			},
 		},
 		{

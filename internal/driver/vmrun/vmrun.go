@@ -23,8 +23,10 @@ func init() {
 
 // Driver controls local VMs through the vmrun binary.
 type Driver struct {
-	runner  *runner
-	invPath string // inventory file, overridable in tests
+	runner    *runner
+	invPath   string // inventory file, overridable in tests
+	vmcliPath string // explicit vmcli override ("" = auto-detect)
+	vmcliBin  string // lazily located vmcli binary
 }
 
 // New builds a vmrun driver, locating the vmrun binary.
@@ -34,8 +36,9 @@ func New(opts driver.Options) (*Driver, error) {
 		return nil, err
 	}
 	return &Driver{
-		runner:  &runner{bin: bin, hostType: hostType, execFn: defaultExec},
-		invPath: defaultInventoryPath(),
+		runner:    &runner{bin: bin, hostType: hostType, execFn: defaultExec},
+		invPath:   defaultInventoryPath(),
+		vmcliPath: opts.VMCliPath,
 	}, nil
 }
 

@@ -32,6 +32,9 @@ type Profile struct {
 	Insecure bool `yaml:"insecure"`
 	// VMRunPath overrides auto-detection of the vmrun binary.
 	VMRunPath string `yaml:"vmrun_path"`
+	// VMCliPath overrides auto-detection of the vmcli binary
+	// (snapshot uid references, Fusion 13.5+).
+	VMCliPath string `yaml:"vmcli_path"`
 }
 
 // Config is the whole configuration file.

@@ -10,6 +10,7 @@ var zhCatalog = map[string]string{
 	// global flags
 	"flag.json":    "以 JSON 格式输出",
 	"flag.vmrun":   "vmrun 可执行文件路径（默认自动探测）",
+	"flag.vmcli":   "vmcli 可执行文件路径（默认自动探测，需要 Fusion 13.5+）",
 	"flag.backend": "使用的后端驱动",
 	"flag.lang":    "界面语言：zh 或 en（默认 zh）",
 	"flag.profile": "使用的配置 profile（缺省取配置文件的 default）",
@@ -27,6 +28,9 @@ var zhCatalog = map[string]string{
 	"err.resolve.notFound":       "找不到虚拟机 %q（可用：%s）",
 	"err.resolve.ambiguous":      "引用 %q 有歧义，匹配到 %d 台虚拟机",
 	"err.resolve.ambiguousNames": "引用 %q 有歧义，匹配到：%s",
+
+	// vmcli (snapshot uid fallback)
+	"err.vmcli.notFound": "找不到 vmcli（需要 VMware Fusion 13.5+，可用 --vmcli 或 VMCTL_VMCLI 指定路径）",
 
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere 后端缺少 endpoint，请在 profile 中配置",
@@ -96,15 +100,18 @@ createVM 命令）。`,
 	"cmd.delete.long":  "永久删除虚拟机，包括磁盘上的全部文件。此操作不可恢复。",
 
 	// snapshot
-	"cmd.snapshot.short":        "管理虚拟机快照",
-	"cmd.snapshot.long":         "快照操作：列出、创建、删除与回退。\n回退要求虚拟机已关机。",
-	"cmd.snapshot.list.short":   "列出虚拟机的快照",
-	"cmd.snapshot.create.short": "创建快照",
-	"cmd.snapshot.delete.short": "删除快照",
-	"cmd.snapshot.delete.long":  "删除快照。默认将子快照重新挂到其父级；\n使用 --children 可一并删除子快照。",
-	"cmd.snapshot.revert.short": "将虚拟机回退到指定快照",
-	"flag.tree":                 "显示快照层级",
-	"flag.children":             "同时删除子快照",
+	"cmd.snapshot.short":            "管理虚拟机快照",
+	"cmd.snapshot.long":             "快照操作：列出、创建、删除与回退。\n回退要求虚拟机已关机。",
+	"cmd.snapshot.list.short":       "列出虚拟机的快照",
+	"cmd.snapshot.create.short":     "创建快照",
+	"cmd.snapshot.delete.short":     "删除快照",
+	"cmd.snapshot.delete.long":      "删除快照。默认将子快照重新挂到其父级；\n使用 --children 可一并删除子快照。",
+	"cmd.snapshot.revert.short":     "将虚拟机回退到指定快照",
+	"flag.tree":                     "显示快照层级",
+	"flag.children":                 "同时删除子快照",
+	"err.snapshot.needName":         "必须指定快照名",
+	"err.snapshot.ambiguous":        "快照名 %q 有歧义，可用的引用：%s（用 <名字#uid> 指定其中一个）",
+	"err.snapshot.ambiguousNoVmcli": "快照名 %q 有歧义，且无法通过 vmcli 列出候选；\n可用 --vmcli 指定 vmcli 路径以启用 <名字#uid> 引用",
 
 	// exec
 	"cmd.exec.short": "在客户机内执行命令",

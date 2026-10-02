@@ -15,12 +15,14 @@ import (
 type mergeInput struct {
 	// Profile is the --profile value ("" = not given).
 	Profile string
-	// Backend / VMRunPath mirror the persistent flags; the *Set
-	// booleans mark them as explicitly passed on the command line.
+	// Backend / VMRunPath / VMCliPath mirror the persistent flags; the
+	// *Set booleans mark them as explicitly passed on the command line.
 	Backend    string
 	BackendSet bool
 	VMRunPath  string
 	VMRunSet   bool
+	VMCliPath  string
+	VMCliSet   bool
 }
 
 // settings is the merged result of CLI flags, profile fields and
@@ -28,6 +30,7 @@ type mergeInput struct {
 type settings struct {
 	Backend   string
 	VMRunPath string
+	VMCliPath string
 	// Endpoint, User, Password and Insecure are consumed once the
 	// vsphere backend lands; they are resolved here so profile
 	// behavior is fully covered by tests today.
@@ -60,6 +63,7 @@ func resolveSettings(cfg *config.Config, in mergeInput) (settings, error) {
 	s := settings{
 		Backend:   p.Backend,
 		VMRunPath: p.VMRunPath,
+		VMCliPath: p.VMCliPath,
 		Endpoint:  p.Endpoint,
 		User:      p.User,
 		Insecure:  p.Insecure,
@@ -72,6 +76,9 @@ func resolveSettings(cfg *config.Config, in mergeInput) (settings, error) {
 	}
 	if in.VMRunSet {
 		s.VMRunPath = in.VMRunPath
+	}
+	if in.VMCliSet {
+		s.VMCliPath = in.VMCliPath
 	}
 	if name != "" {
 		pw, err := p.Secret()
@@ -92,10 +99,14 @@ func openDriver() (driver.Driver, error) {
 		return nil, err
 	}
 
-	in := mergeInput{Profile: flagProfile, Backend: flagBackend, VMRunPath: flagVMRun}
+	in := mergeInput{
+		Profile: flagProfile,
+		Backend: flagBackend, VMRunPath: flagVMRun, VMCliPath: flagVMCli,
+	}
 	if rootFlags != nil {
 		in.BackendSet = rootFlags.Changed("backend")
 		in.VMRunSet = rootFlags.Changed("vmrun")
+		in.VMCliSet = rootFlags.Changed("vmcli")
 	}
 	s, err := resolveSettings(cfg, in)
 	if err != nil {
@@ -103,6 +114,7 @@ func openDriver() (driver.Driver, error) {
 	}
 	return driver.Open(s.Backend, driver.Options{
 		VMRunPath: s.VMRunPath,
+		VMCliPath: s.VMCliPath,
 		Endpoint:  s.Endpoint,
 		User:      s.User,
 		Password:  s.Password,

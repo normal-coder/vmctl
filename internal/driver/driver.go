@@ -156,6 +156,9 @@ type Driver interface {
 type Options struct {
 	// VMRunPath overrides auto-detection of the vmrun binary ("" = detect).
 	VMRunPath string
+	// VMCliPath overrides auto-detection of the vmcli binary ("" =
+	// detect); used by the vmrun backend for snapshot uid references.
+	VMCliPath string
 	// Endpoint is the vCenter/ESXi URL, e.g. https://vcenter.example.com.
 	Endpoint string
 	// User and Password authenticate against the vSphere API.
