@@ -174,4 +174,15 @@ Use --dry-run to print the ssh command instead of running it.`,
 
 	// version
 	"cmd.version.short": "Print vmctl version",
+
+	// completion
+	"cmd.completion.short": "Generate shell autocompletion scripts",
+	"cmd.completion.long": `Generate a shell autocompletion script for vmctl,
+covering commands, global flags (--backend/--profile/--lang)
+and virtual machine names. See each sub-command's help for
+how to load the generated script.`,
+	"cmd.completion.bash":       "Generate the autocompletion script for bash",
+	"cmd.completion.zsh":        "Generate the autocompletion script for zsh",
+	"cmd.completion.fish":       "Generate the autocompletion script for fish",
+	"cmd.completion.powershell": "Generate the autocompletion script for powershell",
 }

@@ -87,6 +87,8 @@ func NewRootCmd() *cobra.Command {
 		newIPCmd(),
 		newVersionCmd(),
 	)
+	registerCompletions(root)
+	localizeCompletion(root)
 	return root
 }
 

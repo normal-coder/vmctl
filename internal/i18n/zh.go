@@ -173,4 +173,14 @@ VMCTL_GUEST_PASSWORD 环境变量代替 --password，
 
 	// version
 	"cmd.version.short": "显示 vmctl 版本",
+
+	// completion
+	"cmd.completion.short": "生成 shell 自动补全脚本",
+	"cmd.completion.long": `为指定的 shell 生成 vmctl 自动补全脚本，
+覆盖命令、全局 flag（--backend/--profile/--lang）
+与虚拟机名。各 shell 的加载方式见子命令帮助。`,
+	"cmd.completion.bash":       "生成 bash 补全脚本",
+	"cmd.completion.zsh":        "生成 zsh 补全脚本",
+	"cmd.completion.fish":       "生成 fish 补全脚本",
+	"cmd.completion.powershell": "生成 powershell 补全脚本",
 }
