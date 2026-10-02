@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
@@ -12,7 +13,7 @@ func newListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List virtual machines",
+		Short:   i18n.T("cmd.list.short"),
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
@@ -31,7 +32,7 @@ func newListCmd() *cobra.Command {
 func newInfoCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "info <vm>",
-		Short: "Show detailed information about a virtual machine",
+		Short: i18n.T("cmd.info.short"),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()

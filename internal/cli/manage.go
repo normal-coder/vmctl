@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
@@ -19,11 +20,9 @@ func newCloneCmd() *cobra.Command {
 	)
 	c := &cobra.Command{
 		Use:   "clone <vm>",
-		Short: "Clone a virtual machine",
-		Long: "Clone a virtual machine. By default a linked clone is created\n" +
-			"(fast; keeps a base snapshot on the source). Use --full for an\n" +
-			"independent copy. The source must be powered off.",
-		Args: cobra.ExactArgs(1),
+		Short: i18n.T("cmd.clone.short"),
+		Long:  i18n.T("cmd.clone.long"),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -41,10 +40,10 @@ func newCloneCmd() *cobra.Command {
 			return output.PrintCreated(os.Stdout, "clone", args[0], dest, flagJSON)
 		},
 	}
-	c.Flags().StringVarP(&name, "name", "n", "", "name for the new virtual machine (required)")
-	c.Flags().BoolVar(&full, "full", false, "create an independent full copy instead of a linked clone")
-	c.Flags().StringVar(&snapshot, "snapshot", "", "base snapshot name for the clone")
-	c.Flags().StringVar(&path, "path", "", "destination bundle directory or .vmx path")
+	c.Flags().StringVarP(&name, "name", "n", "", i18n.T("flag.clone.name"))
+	c.Flags().BoolVar(&full, "full", false, i18n.T("flag.full"))
+	c.Flags().StringVar(&snapshot, "snapshot", "", i18n.T("flag.snapshot"))
+	c.Flags().StringVar(&path, "path", "", i18n.T("flag.path"))
 	_ = c.MarkFlagRequired("name")
 	return c
 }
@@ -60,11 +59,9 @@ func newCreateCmd() *cobra.Command {
 	)
 	c := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a virtual machine from an existing one",
-		Long: "Provision a new virtual machine by cloning a source VM.\n" +
-			"Creating a bare VM from scratch is not supported by the vmrun\n" +
-			"backend (Fusion provides no createVM command).",
-		Args: cobra.ExactArgs(1),
+		Short: i18n.T("cmd.create.short"),
+		Long:  i18n.T("cmd.create.long"),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -85,12 +82,12 @@ func newCreateCmd() *cobra.Command {
 			return output.PrintCreated(os.Stdout, "create", args[0], dest, flagJSON)
 		},
 	}
-	c.Flags().StringVarP(&from, "from", "f", "", "source virtual machine to clone from (required)")
+	c.Flags().StringVarP(&from, "from", "f", "", i18n.T("flag.from"))
 	c.Flags().BoolVar(&full, "full", false, "create an independent full copy instead of a linked clone")
 	c.Flags().StringVar(&snapshot, "snapshot", "", "base snapshot name for the clone")
 	c.Flags().StringVar(&path, "path", "", "destination bundle directory or .vmx path")
-	c.Flags().IntVar(&memory, "memory", 0, "memory in MB for the new VM (0 = keep source)")
-	c.Flags().IntVar(&cpus, "cpus", 0, "number of CPUs for the new VM (0 = keep source)")
+	c.Flags().IntVar(&memory, "memory", 0, i18n.T("flag.memory"))
+	c.Flags().IntVar(&cpus, "cpus", 0, i18n.T("flag.cpus"))
 	_ = c.MarkFlagRequired("from")
 	return c
 }
@@ -103,8 +100,8 @@ func newSetCmd() *cobra.Command {
 	)
 	c := &cobra.Command{
 		Use:   "set <vm>",
-		Short: "Change virtual machine configuration",
-		Long:  "Change memory, CPU count or display name of a powered-off VM.",
+		Short: i18n.T("cmd.set.short"),
+		Long:  i18n.T("cmd.set.long"),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := driver.SetOptions{}
@@ -118,7 +115,7 @@ func newSetCmd() *cobra.Command {
 				opts.CPUs = &cpus
 			}
 			if opts.Empty() {
-				return fmt.Errorf("specify at least one of --name, --memory, --cpus")
+				return fmt.Errorf("%s", i18n.T("err.set.flags"))
 			}
 			d, err := openDriver()
 			if err != nil {
@@ -130,17 +127,17 @@ func newSetCmd() *cobra.Command {
 			return output.PrintOK(os.Stdout, "set", args[0], flagJSON)
 		},
 	}
-	c.Flags().StringVar(&name, "name", "", "new display name")
-	c.Flags().IntVar(&memory, "memory", 0, "memory in MB")
-	c.Flags().IntVar(&cpus, "cpus", 0, "number of CPUs")
+	c.Flags().StringVar(&name, "name", "", i18n.T("flag.set.name"))
+	c.Flags().IntVar(&memory, "memory", 0, i18n.T("flag.set.memory"))
+	c.Flags().IntVar(&cpus, "cpus", 0, i18n.T("flag.set.cpus"))
 	return c
 }
 
 func newDeleteCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <vm>",
-		Short: "Permanently delete a virtual machine and its files",
-		Long:  "Permanently delete a virtual machine, including all files on disk. This cannot be undone.",
+		Short: i18n.T("cmd.delete.short"),
+		Long:  i18n.T("cmd.delete.long"),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()

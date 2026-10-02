@@ -5,15 +5,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
 func newSnapshotCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "snapshot",
-		Short: "Manage virtual machine snapshots",
-		Long: "Work with snapshots: list, create, delete and revert.\n" +
-			"Reverting requires the VM to be powered off.",
+		Short: i18n.T("cmd.snapshot.short"),
+		Long:  i18n.T("cmd.snapshot.long"),
 	}
 	c.AddCommand(
 		newSnapshotListCmd(),
@@ -28,7 +28,7 @@ func newSnapshotListCmd() *cobra.Command {
 	var tree bool
 	c := &cobra.Command{
 		Use:   "list <vm>",
-		Short: "List snapshots of a virtual machine",
+		Short: i18n.T("cmd.snapshot.list.short"),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
@@ -42,14 +42,14 @@ func newSnapshotListCmd() *cobra.Command {
 			return output.PrintSnapshots(os.Stdout, args[0], snaps, flagJSON)
 		},
 	}
-	c.Flags().BoolVar(&tree, "tree", false, "show snapshot hierarchy")
+	c.Flags().BoolVar(&tree, "tree", false, i18n.T("flag.tree"))
 	return c
 }
 
 func newSnapshotCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create <vm> <name>",
-		Short: "Create a snapshot",
+		Short: i18n.T("cmd.snapshot.create.short"),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
@@ -68,10 +68,9 @@ func newSnapshotDeleteCmd() *cobra.Command {
 	var children bool
 	c := &cobra.Command{
 		Use:   "delete <vm> <name>",
-		Short: "Delete a snapshot",
-		Long: "Delete a snapshot. Child snapshots are re-parented by\n" +
-			"default; pass --children to delete them as well.",
-		Args: cobra.ExactArgs(2),
+		Short: i18n.T("cmd.snapshot.delete.short"),
+		Long:  i18n.T("cmd.snapshot.delete.long"),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -83,14 +82,14 @@ func newSnapshotDeleteCmd() *cobra.Command {
 			return output.PrintOK(os.Stdout, "snapshot-delete "+args[1], args[0], flagJSON)
 		},
 	}
-	c.Flags().BoolVar(&children, "children", false, "also delete child snapshots")
+	c.Flags().BoolVar(&children, "children", false, i18n.T("flag.children"))
 	return c
 }
 
 func newSnapshotRevertCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "revert <vm> <name>",
-		Short: "Revert a virtual machine to a snapshot",
+		Short: i18n.T("cmd.snapshot.revert.short"),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()

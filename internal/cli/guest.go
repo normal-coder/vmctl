@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
@@ -18,16 +19,9 @@ func newExecCmd() *cobra.Command {
 	var guestUser, password string
 	c := &cobra.Command{
 		Use:   "exec <vm> -- <command>",
-		Short: "Run a command inside the guest OS",
-		Long: "Run a command inside the guest via VMware Tools. The command\n" +
-			"is executed with /bin/sh, its combined output is printed and\n" +
-			"the guest exit code becomes the vmctl exit code.\n" +
-			"Quote the whole command to use shell features, e.g.:\n" +
-			"  vmctl exec my-vm -- 'df -h | grep /'\n" +
-			"Guest credentials are passed to vmrun on its command line;\n" +
-			"prefer the VMCTL_GUEST_PASSWORD environment variable over\n" +
-			"--password to keep them out of shell history.",
-		Args: cobra.MinimumNArgs(2),
+		Short: i18n.T("cmd.exec.short"),
+		Long:  i18n.T("cmd.exec.long"),
+		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -58,8 +52,8 @@ func newExecCmd() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVarP(&guestUser, "user", "u", "", "guest user name (default: current host user)")
-	c.Flags().StringVarP(&password, "password", "p", "", "guest password (or set VMCTL_GUEST_PASSWORD)")
+	c.Flags().StringVarP(&guestUser, "user", "u", "", i18n.T("flag.exec.user"))
+	c.Flags().StringVarP(&password, "password", "p", "", i18n.T("flag.exec.password"))
 	return c
 }
 
@@ -73,12 +67,8 @@ func newShellCmd() *cobra.Command {
 	)
 	c := &cobra.Command{
 		Use:   "shell <vm>",
-		Short: "Open an SSH session to the guest",
-		Long: "Resolve the guest's IP via VMware Tools and start ssh.\n" +
-			"The guest must run a reachable sshd with key or password\n" +
-			"authentication. Options after -- are passed to ssh, e.g.:\n" +
-			"  vmctl shell my-vm -- -v\n" +
-			"Use --dry-run to print the ssh command instead of running it.",
+		Short: i18n.T("cmd.shell.short"),
+		Long:  i18n.T("cmd.shell.long"),
 		// Exactly one <vm> before --; anything after -- is for ssh.
 		Args: func(cmd *cobra.Command, args []string) error {
 			dash := cmd.Flags().ArgsLenAtDash()
@@ -86,7 +76,7 @@ func newShellCmd() *cobra.Command {
 				dash = len(args)
 			}
 			if dash != 1 {
-				return fmt.Errorf("accepts 1 arg(s), received %d", dash)
+				return fmt.Errorf(i18n.T("err.shell.args"), dash)
 			}
 			return nil
 		},
@@ -118,11 +108,11 @@ func newShellCmd() *cobra.Command {
 			return runSSH("ssh", sshArgs)
 		},
 	}
-	c.Flags().StringVarP(&login, "user", "u", "", "login user (default: current host user)")
-	c.Flags().StringVarP(&port, "port", "", "22", "ssh port")
-	c.Flags().StringVarP(&identity, "identity", "i", "", "ssh private key file")
-	c.Flags().BoolVar(&wait, "wait", false, "wait until the guest reports an IP")
-	c.Flags().BoolVar(&dryRun, "dry-run", false, "print the ssh command instead of connecting")
+	c.Flags().StringVarP(&login, "user", "u", "", i18n.T("flag.shell.user"))
+	c.Flags().StringVarP(&port, "port", "", "22", i18n.T("flag.shell.port"))
+	c.Flags().StringVarP(&identity, "identity", "i", "", i18n.T("flag.shell.identity"))
+	c.Flags().BoolVar(&wait, "wait", false, i18n.T("flag.wait"))
+	c.Flags().BoolVar(&dryRun, "dry-run", false, i18n.T("flag.dry-run"))
 	return c
 }
 
@@ -130,10 +120,9 @@ func newIPCmd() *cobra.Command {
 	var wait bool
 	c := &cobra.Command{
 		Use:   "ip <vm>",
-		Short: "Print the guest IP address",
-		Long: "Print the guest IP as reported by VMware Tools — handy in\n" +
-			"scripts: vmctl ip my-vm",
-		Args: cobra.ExactArgs(1),
+		Short: i18n.T("cmd.ip.short"),
+		Long:  i18n.T("cmd.ip.long"),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -146,7 +135,7 @@ func newIPCmd() *cobra.Command {
 			return output.PrintIP(os.Stdout, args[0], ip, flagJSON)
 		},
 	}
-	c.Flags().BoolVar(&wait, "wait", false, "wait until the guest reports an IP")
+	c.Flags().BoolVar(&wait, "wait", false, i18n.T("flag.wait"))
 	return c
 }
 

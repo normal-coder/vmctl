@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
@@ -42,9 +43,9 @@ func (p powerCommand) cmd() *cobra.Command {
 		},
 	}
 	if p.withFlags {
-		c.Flags().BoolVar(&f.hard, "hard", false, "force the operation (skip guest shutdown)")
+		c.Flags().BoolVar(&f.hard, "hard", false, i18n.T("flag.hard"))
 		if p.use == "start" {
-			c.Flags().BoolVar(&f.noGUI, "nogui", false, "start without opening a window")
+			c.Flags().BoolVar(&f.noGUI, "nogui", false, i18n.T("flag.nogui"))
 		}
 	}
 	return c
@@ -53,7 +54,7 @@ func (p powerCommand) cmd() *cobra.Command {
 func newStartCmd() *cobra.Command {
 	return powerCommand{
 		use:       "start",
-		short:     "Start or resume a virtual machine",
+		short:     i18n.T("cmd.start.short"),
 		withFlags: true,
 		run: func(ctx context.Context, d driver.Driver, ref string, f *powerFlags) error {
 			return d.Start(ctx, ref, driver.StartOptions{NoGUI: f.noGUI})
@@ -64,7 +65,7 @@ func newStartCmd() *cobra.Command {
 func newStopCmd() *cobra.Command {
 	return powerCommand{
 		use:       "stop",
-		short:     "Power off a virtual machine",
+		short:     i18n.T("cmd.stop.short"),
 		withFlags: true,
 		run: func(ctx context.Context, d driver.Driver, ref string, f *powerFlags) error {
 			return d.Stop(ctx, ref, driver.StopOptions{Hard: f.hard})
@@ -75,7 +76,7 @@ func newStopCmd() *cobra.Command {
 func newSuspendCmd() *cobra.Command {
 	return powerCommand{
 		use:       "suspend",
-		short:     "Suspend a virtual machine to disk",
+		short:     i18n.T("cmd.suspend.short"),
 		withFlags: true,
 		run: func(ctx context.Context, d driver.Driver, ref string, f *powerFlags) error {
 			return d.Suspend(ctx, ref, driver.SuspendOptions{Hard: f.hard})
@@ -86,7 +87,7 @@ func newSuspendCmd() *cobra.Command {
 func newResumeCmd() *cobra.Command {
 	return powerCommand{
 		use:   "resume",
-		short: "Resume a suspended or paused virtual machine",
+		short: i18n.T("cmd.resume.short"),
 		run: func(ctx context.Context, d driver.Driver, ref string, _ *powerFlags) error {
 			return d.Resume(ctx, ref)
 		},
@@ -96,7 +97,7 @@ func newResumeCmd() *cobra.Command {
 func newPauseCmd() *cobra.Command {
 	return powerCommand{
 		use:   "pause",
-		short: "Pause a running virtual machine",
+		short: i18n.T("cmd.pause.short"),
 		run: func(ctx context.Context, d driver.Driver, ref string, _ *powerFlags) error {
 			return d.Pause(ctx, ref)
 		},
@@ -106,7 +107,7 @@ func newPauseCmd() *cobra.Command {
 func newResetCmd() *cobra.Command {
 	return powerCommand{
 		use:       "reset",
-		short:     "Reset a virtual machine",
+		short:     i18n.T("cmd.reset.short"),
 		withFlags: true,
 		run: func(ctx context.Context, d driver.Driver, ref string, f *powerFlags) error {
 			return d.Reset(ctx, ref, driver.ResetOptions{Hard: f.hard})
