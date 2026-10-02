@@ -80,6 +80,26 @@ vmctl shell <vm> -- -v                    # -- 之后透传给 ssh
 - vmx 文件路径 / .vmwarevm 目录路径（vmrun）
 - MoRef（`vm-42` / `VirtualMachine:vm-42`）与 inventory path（vsphere）
 
+## 同名快照与 `名字#uid` 引用
+
+vmrun 按**名字**操作快照，遇到多个同名快照会报歧义，并通过 vmcli 列出
+候选引用（`vmctl snapshot delete` / `revert` 均适用）：
+
+```console
+$ vmctl snapshot delete my-vm Clone
+错误: 快照名 "Clone" 有歧义，可用的引用：Clone#1, Clone#2, Clone#5（用 <名字#uid> 指定其中一个）
+$ vmctl snapshot delete my-vm 'Clone#2'
+delete Clone#2: 成功
+```
+
+- `<名字>#<uid>` 的 uid 即 vmcli 报告的快照 uid（≥1）；`foo#0`、`foo#x`、
+  名字里不带 `#` 的，整串都按原快照名处理。
+- 带 uid 的操作经 **vmcli**（VMware Fusion 13.5+，按 uid 删除/回退）执行，
+  查找顺序：`--vmcli` > `VMCTL_VMCLI` > Fusion 默认安装位置 > `PATH`，
+  也可在 profile 中配置 `vmcli_path`。
+- 没有同名冲突时行为不变（仍走 vmrun 按名操作）；vmrun/vmcli 自身的
+  错误消息为英文原文透传。
+
 ## 配置文件
 
 默认读取 `~/.config/vmctl/config.yaml`（`macOS` 为 `~/Library/Application Support/vmctl/`），
@@ -96,7 +116,8 @@ profiles:
     insecure: true                         # 自签证书时跳过校验
   local:
     backend: vmrun
-    # vmrun: /Applications/VMware Fusion.app/.../vmrun   # 可选
+    # vmrun_path: /Applications/VMware Fusion.app/.../vmrun   # 可选
+    # vmcli_path: /Applications/VMware Fusion.app/.../vmcli   # 可选（快照 uid 引用）
 ```
 
 - `default` 指定无 `--profile` 时使用的 profile；文件缺省时不报错（行为与无配置一致）。
@@ -129,9 +150,39 @@ vmctl --lang en list --help     # 英文帮助
 | `--profile` | 使用的配置 profile（缺省取配置文件的 `default`） |
 | `--lang` | 界面语言：`zh` / `en`，默认 `zh` |
 | `--vmrun` | 指定 vmrun 路径（默认自动探测） |
+| `--vmcli` | 指定 vmcli 路径（默认自动探测，快照 uid 引用需要 Fusion 13.5+） |
 
-环境变量：`VMCTL_VMRUN`（vmrun 路径）、`VMCTL_CONFIG`（配置文件路径）、
-`VMCTL_LANG`（界面语言）。
+环境变量：`VMCTL_VMRUN`（vmrun 路径）、`VMCTL_VMCLI`（vmcli 路径）、
+`VMCTL_CONFIG`（配置文件路径）、`VMCTL_LANG`（界面语言）、
+`VMCTL_GUEST_PASSWORD`（exec 的 guest 密码，避免进 shell 历史）。
+
+## 退出码
+
+| 码 | 含义 |
+|---|---|
+| `0` | 成功 |
+| `1` | 运行错误（后端失败、虚拟机不存在等，消息打到 stderr） |
+| `2` | 用法错误（未知 flag、参数个数不对；stderr 附带该命令的 usage） |
+| 其他 | `exec` 透传 guest 程序退出码，`shell` 透传 ssh 退出码 |
+
+## Shell 补全
+
+内置补全覆盖命令、全局 flag（`--backend` / `--profile` / `--lang`）与
+虚拟机名（动态读取当前后端的 VM 列表；后端出错时静默跳过）：
+
+```bash
+# zsh：向 ~/.zshrc 追加一行
+echo 'source <(vmctl completion zsh)' >> ~/.zshrc
+
+# bash（macOS Homebrew 安装）
+vmctl completion bash > /opt/homebrew/etc/bash_completion.d/vmctl
+
+# fish
+vmctl completion fish > ~/.config/fish/completions/vmctl.fish
+```
+
+重开 shell 后即可 Tab 补全：`vmctl <Tab>`、`vmctl --backend <Tab>`、
+`vmctl stop <Tab>`（VM 名）。手动调试可用 `vmctl __complete stop ''`。
 
 ## vSphere 后端
 
@@ -167,12 +218,12 @@ inventory path（如 `DC0/vm/my-vm`）。0 命中报错并列出可用名称，�
 
 ```
 cmd/vmctl          入口
-internal/cli       cobra 命令树
+internal/cli       cobra 命令树（completion.go 补全接线、errors.go 退出码分类）
 internal/output    表格 / JSON 渲染
 internal/config    配置文件加载与 profile 解析（YAML，严格模式）
 internal/i18n      轻量消息目录（中英切换，key 对齐测试）
 internal/driver    统一 Driver 接口 + 注册表
-  ├── vmrun/       本地 vmrun 驱动（解析 Fusion vmInventory + 调用 vmrun）
+  ├── vmrun/       本地 vmrun 驱动（vmInventory 解析 + vmcli 快照 uid fallback）
   └── vsphere/     远程 vSphere 驱动（govmomi：库存/电源/克隆/快照/guest ops）
 internal/model     与后端无关的 VM 模型
 ```
@@ -183,4 +234,6 @@ internal/model     与后端无关的 VM 模型
 - [x] M2：create / clone / set / delete
 - [x] M3：snapshot 全套 + guest exec + ip / shell
 - [x] M4：vsphere 后端（govmomi）+ profile 配置 + 多语言文案
-- [ ] M5：vmcli 同名快照 fallback、vmrun 存量英文错误汉化回填、shell 补全、体验打磨
+- [x] M5：vmcli 同名快照 fallback + 存量英文错误汉化回填 + shell 补全 + 退出码/用法错误打磨
+- [ ] M6（余项）：cobra Args 报错文案全量中文化、`snapshot list` 增加 uid 列、
+  version JSON 输出、退出码更细分类
