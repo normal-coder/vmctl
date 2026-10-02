@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 func TestParseSnapshotList(t *testing.T) {
@@ -180,7 +181,7 @@ func TestExecCapturesOutputAndExitCode(t *testing.T) {
 func TestExecRefusedWhenPoweredOff(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	_, _, err := d.Exec(context.Background(), "demo-two", execOpts("true", "", ""))
-	if err == nil || !strings.Contains(err.Error(), "power it on") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.vmrun.notRunningFor", "exec")) {
 		t.Errorf("want powered-on error, got %v", err)
 	}
 }

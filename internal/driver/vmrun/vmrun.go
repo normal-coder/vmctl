@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
@@ -271,7 +272,7 @@ func (d *Driver) waitPoweredOn(ctx context.Context, path string) error {
 			return nil
 		}
 		if time.Now().After(deadline) {
-			return fmt.Errorf("timed out waiting for %q to power on", path)
+			return fmt.Errorf(i18n.T("err.vmrun.powerOnTimeout"), path)
 		}
 		select {
 		case <-ctx.Done():
@@ -326,7 +327,7 @@ func (d *Driver) Resume(ctx context.Context, ref string) error {
 		_, err = d.runner.run(ctx, "start", path)
 		return err
 	case model.StateOff:
-		return fmt.Errorf("%q is powered off, use start", ref)
+		return fmt.Errorf(i18n.T("err.vmrun.offUseStart"), ref)
 	default: // on or unknown — attempt unpause
 		if _, uerr := d.runner.run(ctx, "unpause", path); uerr != nil {
 			if running[absPath(path)] {

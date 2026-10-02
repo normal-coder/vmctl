@@ -59,7 +59,7 @@ func parseSnapshotList(out string) []model.Snapshot {
 // SnapshotCreate implements driver.Driver.
 func (d *Driver) SnapshotCreate(ctx context.Context, ref, name string) error {
 	if err := validateName(name); err != nil {
-		return fmt.Errorf("invalid snapshot name: %w", err)
+		return fmt.Errorf(i18n.T("err.snapshot.invalidName"), err)
 	}
 	path, err := d.resolve(ref)
 	if err != nil {

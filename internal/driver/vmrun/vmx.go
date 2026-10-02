@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf16"
+
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // vmxConfig holds the .vmx fields VMCTL surfaces.
@@ -113,7 +115,7 @@ func setVMXKeys(path string, keys map[string]string) error {
 		return err
 	}
 	if isUTF16(raw) {
-		return fmt.Errorf("%s: UTF-16 encoded vmx is not supported for editing", path)
+		return fmt.Errorf(i18n.T("err.vmx.utf16"), path)
 	}
 	trimmed := bytes.TrimPrefix(raw, []byte{0xEF, 0xBB, 0xBF})
 	lines := splitLines(strings.TrimSuffix(string(trimmed), "\n"))

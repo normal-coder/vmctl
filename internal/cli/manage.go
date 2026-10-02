@@ -41,11 +41,17 @@ func newCloneCmd() *cobra.Command {
 		},
 	}
 	c.Flags().StringVarP(&name, "name", "n", "", i18n.T("flag.clone.name"))
-	c.Flags().BoolVar(&full, "full", false, i18n.T("flag.full"))
-	c.Flags().StringVar(&snapshot, "snapshot", "", i18n.T("flag.snapshot"))
-	c.Flags().StringVar(&path, "path", "", i18n.T("flag.path"))
+	addCloneOptionFlags(c, &full, &snapshot, &path)
 	_ = c.MarkFlagRequired("name")
 	return c
+}
+
+// addCloneOptionFlags registers the --full/--snapshot/--path trio
+// shared by the clone and create commands.
+func addCloneOptionFlags(c *cobra.Command, full *bool, snapshot, path *string) {
+	c.Flags().BoolVar(full, "full", false, i18n.T("flag.full"))
+	c.Flags().StringVar(snapshot, "snapshot", "", i18n.T("flag.snapshot"))
+	c.Flags().StringVar(path, "path", "", i18n.T("flag.path"))
 }
 
 func newCreateCmd() *cobra.Command {
@@ -83,9 +89,7 @@ func newCreateCmd() *cobra.Command {
 		},
 	}
 	c.Flags().StringVarP(&from, "from", "f", "", i18n.T("flag.from"))
-	c.Flags().BoolVar(&full, "full", false, "create an independent full copy instead of a linked clone")
-	c.Flags().StringVar(&snapshot, "snapshot", "", "base snapshot name for the clone")
-	c.Flags().StringVar(&path, "path", "", "destination bundle directory or .vmx path")
+	addCloneOptionFlags(c, &full, &snapshot, &path)
 	c.Flags().IntVar(&memory, "memory", 0, i18n.T("flag.memory"))
 	c.Flags().IntVar(&cpus, "cpus", 0, i18n.T("flag.cpus"))
 	_ = c.MarkFlagRequired("from")

@@ -20,6 +20,12 @@ var (
 	ErrNotSupported = errors.New("operation not supported by this backend")
 )
 
+// WrapNotFound attaches the ErrNotFound sentinel to an already
+// localized detail sentence, keeping errors.Is matching intact.
+func WrapNotFound(detail string) error {
+	return fmt.Errorf("%w: %s", ErrNotFound, detail)
+}
+
 // StartOptions controls how a VM is powered on.
 type StartOptions struct {
 	// NoGUI starts the VM without opening a window (headless).

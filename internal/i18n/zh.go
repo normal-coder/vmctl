@@ -32,6 +32,34 @@ var zhCatalog = map[string]string{
 	// vmcli (snapshot uid fallback)
 	"err.vmcli.notFound": "找不到 vmcli（需要 VMware Fusion 13.5+，可用 --vmcli 或 VMCTL_VMCLI 指定路径）",
 
+	// vmrun backend
+	"err.name.empty":           "名称不能为空",
+	"err.name.invalid":         "无效的名称 %q：不能包含 /、\\、引号或控制字符",
+	"err.name.exists":          "已存在名为 %q 的虚拟机",
+	"err.vmrun.notFound":       "找不到 vmrun（请安装 VMware Fusion/Workstation 或设置 VMCTL_VMRUN）",
+	"err.vmrun.runningFor":     "无法执行 %s：虚拟机正在运行，请先关机",
+	"err.vmrun.notRunningFor":  "无法执行 %s：虚拟机未在运行，请先开机",
+	"err.vmrun.powerOnTimeout": "等待 %q 开机超时",
+	"err.vmrun.offUseStart":    "%q 处于关机状态，请改用 start",
+	"err.vmrun.exitZero":       "vmrun 以退出码 0 结束但报告了错误",
+	"err.dest.exists":          "目标路径已存在：%s",
+	"err.dest.notDir":          "目标不是目录：%s",
+	"err.dest.notEmpty":        "目标目录非空：%s",
+	"err.clone.regFail":        "已克隆到 %s，但库存注册失败：%w",
+	"err.clone.configFail":     "已克隆到 %s，但克隆后配置失败：%w",
+	"err.clone.noFrom":         "此后端无法创建裸虚拟机，请用 --from 指定源虚拟机",
+	"err.set.memoryPositive":   "内存必须大于 0 MB",
+	"err.set.cpusPositive":     "CPU 数必须大于 0",
+	"err.set.renameFail":       "已更新 %s，但库存重命名失败：%w",
+	"err.delete.cleanupFail":   "已删除，但库存清理失败：%w",
+	"err.vmx.utf16":            "%s：不支持编辑 UTF-16 编码的 vmx 文件",
+	"err.snapshot.invalidName": "无效的快照名：%w",
+
+	// output
+	"output.noVMs":       "未找到虚拟机。",
+	"output.noSnapshots": "%s 没有快照。",
+	"output.ok":          "成功",
+
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere 后端缺少 endpoint，请在 profile 中配置",
 	"err.vsphere.user":             "vsphere 后端缺少登录用户名",

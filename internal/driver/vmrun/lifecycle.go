@@ -2,6 +2,7 @@ package vmrun
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,16 +10,17 @@ import (
 	"strings"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // validateName rejects names that cannot be represented safely in
 // vmx files or bundle paths.
 func validateName(name string) error {
 	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("name must not be empty")
+		return errors.New(i18n.T("err.name.empty"))
 	}
 	if strings.ContainsAny(name, `/\\"`) || strings.ContainsAny(name, "\n\r\t") {
-		return fmt.Errorf("invalid name %q: must not contain /, \\, quotes or control characters", name)
+		return fmt.Errorf(i18n.T("err.name.invalid"), name)
 	}
 	return nil
 }
@@ -35,7 +37,7 @@ func (d *Driver) ensureUniqueName(name, selfPath string) error {
 			continue
 		}
 		if strings.EqualFold(e.Name, name) {
-			return fmt.Errorf("a VM named %q already exists", e.Name)
+			return fmt.Errorf(i18n.T("err.name.exists"), e.Name)
 		}
 	}
 	return nil
@@ -48,7 +50,7 @@ func (d *Driver) ensurePoweredOff(ctx context.Context, path, action string) erro
 		return err
 	}
 	if running[absPath(path)] {
-		return fmt.Errorf("cannot %s while the VM is running: power it off first", action)
+		return fmt.Errorf(i18n.T("err.vmrun.runningFor"), action)
 	}
 	return nil
 }
@@ -60,7 +62,7 @@ func (d *Driver) ensureRunning(ctx context.Context, path, action string) error {
 		return err
 	}
 	if !running[absPath(path)] {
-		return fmt.Errorf("cannot %s while the VM is not running: power it on first", action)
+		return fmt.Errorf(i18n.T("err.vmrun.notRunningFor"), action)
 	}
 	return nil
 }
@@ -85,19 +87,19 @@ func cloneDestPath(src string, opts driver.CloneOptions) string {
 // checkDestAvailable fails early if the destination already exists.
 func checkDestAvailable(dest string) error {
 	if _, err := os.Stat(dest); err == nil {
-		return fmt.Errorf("destination already exists: %s", dest)
+		return fmt.Errorf(i18n.T("err.dest.exists"), dest)
 	}
 	dir := filepath.Dir(dest)
 	if fi, err := os.Stat(dir); err == nil {
 		if !fi.IsDir() {
-			return fmt.Errorf("destination is not a directory: %s", dir)
+			return fmt.Errorf(i18n.T("err.dest.notDir"), dir)
 		}
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			return err
 		}
 		if len(entries) > 0 {
-			return fmt.Errorf("destination directory is not empty: %s", dir)
+			return fmt.Errorf(i18n.T("err.dest.notEmpty"), dir)
 		}
 	}
 	return nil
@@ -154,7 +156,7 @@ func (d *Driver) Clone(ctx context.Context, ref string, opts driver.CloneOptions
 	// make it visible to `vmctl list`.
 	uuid := fillCloneUUID(dest)
 	if err := registerVM(d.invPath, dest, opts.Name, uuid); err != nil {
-		return dest, fmt.Errorf("cloned to %s, but inventory registration failed: %w", dest, err)
+		return dest, fmt.Errorf(i18n.T("err.clone.regFail"), dest, err)
 	}
 	return dest, nil
 }
@@ -166,7 +168,7 @@ func (d *Driver) Create(ctx context.Context, opts driver.CreateOptions) (string,
 		return "", err
 	}
 	if opts.From == "" {
-		return "", fmt.Errorf("%w: this backend cannot create a bare VM, specify a source with --from", driver.ErrNotSupported)
+		return "", fmt.Errorf("%w: %s", driver.ErrNotSupported, i18n.T("err.clone.noFrom"))
 	}
 	dest, err := d.Clone(ctx, opts.From, driver.CloneOptions{
 		Name:     opts.Name,
@@ -186,7 +188,7 @@ func (d *Driver) Create(ctx context.Context, opts driver.CreateOptions) (string,
 			set.CPUs = &opts.CPUs
 		}
 		if err := d.Set(ctx, dest, set); err != nil {
-			return dest, fmt.Errorf("cloned to %s, but post-clone configuration failed: %w", dest, err)
+			return dest, fmt.Errorf(i18n.T("err.clone.configFail"), dest, err)
 		}
 	}
 	return dest, nil
@@ -195,7 +197,7 @@ func (d *Driver) Create(ctx context.Context, opts driver.CreateOptions) (string,
 // Set implements driver.Driver: edits the vmx of a powered-off VM.
 func (d *Driver) Set(ctx context.Context, ref string, opts driver.SetOptions) error {
 	if opts.Empty() {
-		return fmt.Errorf("nothing to set: specify memory, cpus and/or name")
+		return errors.New(i18n.T("err.set.flags"))
 	}
 	path, err := d.resolve(ref)
 	if err != nil {
@@ -226,13 +228,13 @@ func (d *Driver) Set(ctx context.Context, ref string, opts driver.SetOptions) er
 	}
 	if opts.MemoryMB != nil {
 		if *opts.MemoryMB <= 0 {
-			return fmt.Errorf("memory must be greater than 0 MB")
+			return errors.New(i18n.T("err.set.memoryPositive"))
 		}
 		keys["memsize"] = strconv.Itoa(*opts.MemoryMB)
 	}
 	if opts.CPUs != nil {
 		if *opts.CPUs <= 0 {
-			return fmt.Errorf("cpus must be greater than 0")
+			return errors.New(i18n.T("err.set.cpusPositive"))
 		}
 		keys["numvcpus"] = strconv.Itoa(*opts.CPUs)
 	}
@@ -242,7 +244,7 @@ func (d *Driver) Set(ctx context.Context, ref string, opts driver.SetOptions) er
 	}
 	if rename {
 		if err := renameInInventory(d.invPath, path, *opts.Name); err != nil {
-			return fmt.Errorf("updated %s, but inventory rename failed: %w", path, err)
+			return fmt.Errorf(i18n.T("err.set.renameFail"), path, err)
 		}
 	}
 	return nil
@@ -263,7 +265,7 @@ func (d *Driver) Delete(ctx context.Context, ref string) error {
 	}
 	// Belt and braces: drop the inventory entry in case vmrun left it.
 	if err := unregisterVM(d.invPath, path); err != nil {
-		return fmt.Errorf("deleted, but inventory cleanup failed: %w", err)
+		return fmt.Errorf(i18n.T("err.delete.cleanupFail"), err)
 	}
 	return nil
 }

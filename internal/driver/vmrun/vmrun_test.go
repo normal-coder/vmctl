@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
@@ -349,7 +350,7 @@ func TestResolveErrors(t *testing.T) {
 	if _, err := d.resolve("no-such-vm"); !errors.Is(err, driver.ErrNotFound) {
 		t.Errorf("want ErrNotFound, got %v", err)
 	}
-	if _, err := d.resolve("demo"); err == nil || !strings.Contains(err.Error(), "ambiguous") {
+	if _, err := d.resolve("demo"); err == nil || !strings.Contains(err.Error(), i18n.T("err.resolve.ambiguousNames", "demo", "demo-one, demo-two")) {
 		t.Errorf("want ambiguous error for substring demo, got %v", err)
 	}
 }

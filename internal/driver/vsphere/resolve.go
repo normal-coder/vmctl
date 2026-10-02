@@ -29,7 +29,7 @@ type invVM struct {
 func (d *Driver) resolve(ctx context.Context, ref string) (*object.VirtualMachine, error) {
 	ref = strings.TrimSpace(ref)
 	if ref == "" {
-		return nil, fmt.Errorf("%w: %s", driver.ErrNotFound, i18n.T("err.resolve.empty"))
+		return nil, driver.WrapNotFound(i18n.T("err.resolve.empty"))
 	}
 
 	c, err := d.connect(ctx)
@@ -72,7 +72,7 @@ func (d *Driver) resolve(ctx context.Context, ref string) (*object.VirtualMachin
 			names = append(names, v.Name)
 		}
 	}
-	return nil, fmt.Errorf("%w: %q (known: %s)", driver.ErrNotFound, ref, joinNames(names))
+	return nil, driver.WrapNotFound(fmt.Sprintf(i18n.T("err.resolve.notFound"), ref, joinNames(names)))
 }
 
 // listInventory fetches name and UUID for every VM in the inventory.

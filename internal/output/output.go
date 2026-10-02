@@ -11,6 +11,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
@@ -20,7 +21,7 @@ func PrintVMs(w io.Writer, vms []model.VM, asJSON bool) error {
 		return writeJSON(w, vms)
 	}
 	if len(vms) == 0 {
-		_, err := fmt.Fprintln(w, "No virtual machines found.")
+		_, err := fmt.Fprintln(w, i18n.T("output.noVMs"))
 		return err
 	}
 	t := newTable()
@@ -69,7 +70,7 @@ func PrintOK(w io.Writer, action, name string, asJSON bool) error {
 	if asJSON {
 		return writeJSON(w, map[string]string{"action": action, "vm": name, "result": "ok"})
 	}
-	_, err := fmt.Fprintf(w, "%s %s: ok\n", action, name)
+	_, err := fmt.Fprintf(w, "%s %s: %s\n", action, name, i18n.T("output.ok"))
 	return err
 }
 
@@ -79,7 +80,7 @@ func PrintCreated(w io.Writer, action, name, path string, asJSON bool) error {
 	if asJSON {
 		return writeJSON(w, map[string]string{"action": action, "vm": name, "result": "ok", "path": path})
 	}
-	_, err := fmt.Fprintf(w, "%s %s: ok\n  -> %s\n", action, name, path)
+	_, err := fmt.Fprintf(w, "%s %s: %s\n  -> %s\n", action, name, i18n.T("output.ok"), path)
 	return err
 }
 
@@ -90,7 +91,7 @@ func PrintSnapshots(w io.Writer, ref string, snaps []model.Snapshot, asJSON bool
 		return writeJSON(w, map[string]any{"vm": ref, "snapshots": snaps})
 	}
 	if len(snaps) == 0 {
-		_, err := fmt.Fprintf(w, "No snapshots for %s.\n", ref)
+		_, err := fmt.Fprintf(w, i18n.T("output.noSnapshots")+"\n", ref)
 		return err
 	}
 	t := newTable()

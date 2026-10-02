@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // --- clone ------------------------------------------------------------
@@ -66,7 +67,7 @@ func TestCloneFullAndSnapshot(t *testing.T) {
 func TestCloneRefusedWhileRunning(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	_, err := d.Clone(context.Background(), "demo-one", driver.CloneOptions{Name: "x"})
-	if err == nil || !strings.Contains(err.Error(), "power it off") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.vmrun.runningFor", "clone")) {
 		t.Errorf("want powered-off error, got %v", err)
 	}
 }
@@ -74,7 +75,7 @@ func TestCloneRefusedWhileRunning(t *testing.T) {
 func TestCloneNameConflict(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	_, err := d.Clone(context.Background(), "demo-two", driver.CloneOptions{Name: "demo-one"})
-	if err == nil || !strings.Contains(err.Error(), "already exists") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.name.exists", "demo-one")) {
 		t.Errorf("want name-conflict error, got %v", err)
 	}
 }
@@ -90,7 +91,7 @@ func TestCloneDestExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err := d.Clone(context.Background(), "demo-two", driver.CloneOptions{Name: "taken", Path: dest})
-	if err == nil || !strings.Contains(err.Error(), "already exists") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.dest.exists", dest)) {
 		t.Errorf("want dest-exists error, got %v", err)
 	}
 }
@@ -154,7 +155,7 @@ func TestSetRefusedWhileRunning(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	mem := 4096
 	err := d.Set(context.Background(), "demo-one", driver.SetOptions{MemoryMB: &mem})
-	if err == nil || !strings.Contains(err.Error(), "power it off") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.vmrun.runningFor", "set")) {
 		t.Errorf("want powered-off error, got %v", err)
 	}
 }
@@ -163,7 +164,7 @@ func TestSetRenameConflict(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	name := "demo-one"
 	err := d.Set(context.Background(), "demo-two", driver.SetOptions{Name: &name})
-	if err == nil || !strings.Contains(err.Error(), "already exists") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.name.exists", "demo-one")) {
 		t.Errorf("want name-conflict error, got %v", err)
 	}
 }
@@ -198,7 +199,7 @@ func TestDelete(t *testing.T) {
 func TestDeleteRefusedWhileRunning(t *testing.T) {
 	d, _, _ := newTestEnv(t)
 	err := d.Delete(context.Background(), "demo-one")
-	if err == nil || !strings.Contains(err.Error(), "power it off") {
+	if err == nil || !strings.Contains(err.Error(), i18n.T("err.vmrun.runningFor", "delete")) {
 		t.Errorf("want powered-off error, got %v", err)
 	}
 }

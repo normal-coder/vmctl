@@ -32,6 +32,34 @@ var enCatalog = map[string]string{
 	// vmcli (snapshot uid fallback)
 	"err.vmcli.notFound": "vmcli not found (requires VMware Fusion 13.5+; set --vmcli or VMCTL_VMCLI)",
 
+	// vmrun backend
+	"err.name.empty":           "name must not be empty",
+	"err.name.invalid":         "invalid name %q: must not contain /, \\, quotes or control characters",
+	"err.name.exists":          "a VM named %q already exists",
+	"err.vmrun.notFound":       "vmrun not found (install VMware Fusion/Workstation or set VMCTL_VMRUN)",
+	"err.vmrun.runningFor":     "cannot %s while the VM is running: power it off first",
+	"err.vmrun.notRunningFor":  "cannot %s while the VM is not running: power it on first",
+	"err.vmrun.powerOnTimeout": "timed out waiting for %q to power on",
+	"err.vmrun.offUseStart":    "%q is powered off, use start",
+	"err.vmrun.exitZero":       "vmrun reported an error with exit code 0",
+	"err.dest.exists":          "destination already exists: %s",
+	"err.dest.notDir":          "destination is not a directory: %s",
+	"err.dest.notEmpty":        "destination directory is not empty: %s",
+	"err.clone.regFail":        "cloned to %s, but inventory registration failed: %w",
+	"err.clone.configFail":     "cloned to %s, but post-clone configuration failed: %w",
+	"err.clone.noFrom":         "this backend cannot create a bare VM; pass --from to clone an existing one",
+	"err.set.memoryPositive":   "memory must be greater than 0 MB",
+	"err.set.cpusPositive":     "cpus must be greater than 0",
+	"err.set.renameFail":       "updated %s, but inventory rename failed: %w",
+	"err.delete.cleanupFail":   "deleted, but inventory cleanup failed: %w",
+	"err.vmx.utf16":            "%s: UTF-16 encoded vmx is not supported for editing",
+	"err.snapshot.invalidName": "invalid snapshot name: %w",
+
+	// output
+	"output.noVMs":       "No virtual machines found.",
+	"output.noSnapshots": "No snapshots for %s.",
+	"output.ok":          "ok",
+
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere backend requires an endpoint; configure it in a profile",
 	"err.vsphere.user":             "vsphere backend requires a user name",

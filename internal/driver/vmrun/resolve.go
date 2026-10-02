@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // resolve maps a user-supplied reference (path, name or UUID) to an
@@ -19,7 +20,7 @@ import (
 func (d *Driver) resolve(ref string) (string, error) {
 	ref = strings.TrimSpace(ref)
 	if ref == "" {
-		return "", fmt.Errorf("%w: empty reference", driver.ErrNotFound)
+		return "", driver.WrapNotFound(i18n.T("err.resolve.empty"))
 	}
 
 	// 1. direct path
@@ -50,7 +51,7 @@ func (d *Driver) resolve(ref string) (string, error) {
 	case 0:
 		// fall through
 	default:
-		return "", fmt.Errorf("ambiguous reference %q matches %d VMs", ref, len(nameHits))
+		return "", fmt.Errorf(i18n.T("err.resolve.ambiguous"), ref, len(nameHits))
 	}
 
 	// 3. UUID: exact, dashed prefix or bare-hex prefix (>= 8 chars)
@@ -65,7 +66,7 @@ func (d *Driver) resolve(ref string) (string, error) {
 			return uuidHits[0].Path, nil
 		}
 		if len(uuidHits) > 1 {
-			return "", fmt.Errorf("ambiguous reference %q matches %d VMs", ref, len(uuidHits))
+			return "", fmt.Errorf(i18n.T("err.resolve.ambiguous"), ref, len(uuidHits))
 		}
 	}
 
@@ -81,10 +82,10 @@ func (d *Driver) resolve(ref string) (string, error) {
 		return partial[0].Path, nil
 	}
 	if len(partial) > 1 {
-		return "", fmt.Errorf("ambiguous reference %q matches: %s", ref, joinNames(partial))
+		return "", fmt.Errorf(i18n.T("err.resolve.ambiguousNames"), ref, joinNames(partial))
 	}
 
-	return "", fmt.Errorf("%w: %q (known VMs: %s)", driver.ErrNotFound, ref, joinNames(entries))
+	return "", driver.WrapNotFound(fmt.Sprintf(i18n.T("err.resolve.notFound"), ref, joinNames(entries)))
 }
 
 // compactHex strips separators from s and lowercases it. Returns "" if

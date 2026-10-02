@@ -2,7 +2,6 @@ package vmrun
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,7 +50,7 @@ func locate(override string) (bin, hostType string, err error) {
 			return p, hostTypeFor(c), nil
 		}
 	}
-	return "", "", fmt.Errorf("vmrun not found (install VMware Fusion/Workstation or set %s)", envVMRunPath)
+	return "", "", errors.New(i18n.T("err.vmrun.notFound"))
 }
 
 // locateVMCli resolves the vmcli binary path. Order mirrors locate:

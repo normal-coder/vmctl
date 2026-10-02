@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // execFunc runs a command and returns combined output on failure.
@@ -66,7 +66,7 @@ func (r *runner) run(ctx context.Context, args ...string) (string, error) {
 	text := strings.TrimSpace(string(out))
 
 	if err == nil && vmrunReportedError(text) {
-		err = errors.New("vmrun reported an error with exit code 0")
+		err = errors.New(i18n.T("err.vmrun.exitZero"))
 	}
 	if err != nil {
 		return "", classify(&Error{Args: args, Output: text, Err: err})
@@ -91,7 +91,9 @@ func classify(err error) error {
 		strings.Contains(msg, "could not find"),
 		strings.Contains(msg, "not found"),
 		strings.Contains(msg, "no such"):
-		return fmt.Errorf("%w: %s", driver.ErrNotFound, ve.Error())
+		// vmrun's own message stays verbatim (external tool output);
+		// only the sentinel is attached.
+		return driver.WrapNotFound(ve.Error())
 	}
 	return err
 }

@@ -3,12 +3,14 @@ package vmrun
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
 // Exec implements driver.Driver.
@@ -21,7 +23,7 @@ import (
 // output with a non-zero exit code instead of breaking the wrapper.
 func (d *Driver) Exec(ctx context.Context, ref string, opts driver.ExecOptions) (string, int, error) {
 	if strings.TrimSpace(opts.Script) == "" {
-		return "", 0, fmt.Errorf("empty command")
+		return "", 0, errors.New(i18n.T("err.exec.empty"))
 	}
 	path, err := d.resolve(ref)
 	if err != nil {
@@ -100,7 +102,7 @@ func (d *Driver) GuestIP(ctx context.Context, ref string, wait bool) (string, er
 	}
 	ip := parseGuestIP(out)
 	if ip == "" {
-		return "", fmt.Errorf("guest reported no IP address yet (is VMware Tools running?)")
+		return "", errors.New(i18n.T("err.vsphere.noIP"))
 	}
 	return ip, nil
 }
