@@ -82,6 +82,18 @@ var enCatalog = map[string]string{
 	"err.prefix":       "Error",
 	"err.notSupported": "operation not supported by this backend",
 
+	// usage (cobra args / pflag flags)
+	"err.args.exact":           "accepts %d arg(s), received %d",
+	"err.args.minimum":         "requires at least %d arg(s), only received %d",
+	"err.unknownCommand":       "unknown command %q for %q",
+	"err.flag.unknownLong":     "unknown flag: --%s",
+	"err.flag.unknownShort":    "unknown shorthand flag: -%s",
+	"err.flag.needsValue":      "flag needs an argument: --%s",
+	"err.flag.needsValueShort": "flag needs an argument: -%s",
+	"err.flag.badSyntax":       "bad flag syntax: %s",
+	"err.flag.invalidValue":    "flag --%s has an invalid value %q",
+	"err.flag.required":        "required flag(s) %s not set",
+
 	// list / info
 	"cmd.list.short": "List virtual machines",
 	"cmd.info.short": "Show detailed information about a virtual machine",

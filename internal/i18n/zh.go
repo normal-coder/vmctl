@@ -82,6 +82,18 @@ var zhCatalog = map[string]string{
 	"err.prefix":       "错误",
 	"err.notSupported": "此操作该后端不支持",
 
+	// usage (cobra args / pflag flags)
+	"err.args.exact":           "需要 %d 个参数，实际收到 %d 个",
+	"err.args.minimum":         "至少需要 %d 个参数，实际收到 %d 个",
+	"err.unknownCommand":       "未知命令 %q（%s）",
+	"err.flag.unknownLong":     "未知选项 --%s",
+	"err.flag.unknownShort":    "未知短选项 -%s",
+	"err.flag.needsValue":      "选项 --%s 缺少参数值",
+	"err.flag.needsValueShort": "短选项 -%s 缺少参数值",
+	"err.flag.badSyntax":       "选项写法无效：%s",
+	"err.flag.invalidValue":    "选项 --%s 的取值 %q 无效",
+	"err.flag.required":        "缺少必填选项：%s",
+
 	// list / info
 	"cmd.list.short": "列出虚拟机",
 	"cmd.info.short": "显示虚拟机详细信息",

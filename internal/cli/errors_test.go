@@ -70,20 +70,26 @@ func TestArgValidatorsAreUsageErrors(t *testing.T) {
 		name string
 		args cobra.PositionalArgs
 		in   []string
+		want string
 	}{
-		{"exact", exactArgs(1), nil},
-		{"minimum", minimumNArgs(2), []string{"one"}},
-		{"noArgs", noArgs, []string{"extra"}},
+		{"exact", exactArgs(1), nil, fmt.Sprintf(i18n.T("err.args.exact"), 1, 0)},
+		{"exactExtra", exactArgs(1), []string{"a", "b"}, fmt.Sprintf(i18n.T("err.args.exact"), 1, 2)},
+		{"minimum", minimumNArgs(2), []string{"one"}, fmt.Sprintf(i18n.T("err.args.minimum"), 2, 1)},
+		{"noArgs", noArgs, []string{"extra"}, fmt.Sprintf(i18n.T("err.unknownCommand"), "extra", "version")},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			err := c.args(&cobra.Command{}, c.in)
+			cmd := &cobra.Command{Use: "version"}
+			err := c.args(cmd, c.in)
 			if err == nil {
 				t.Fatal("want error")
 			}
 			var ue usageError
 			if !errors.As(err, &ue) {
 				t.Errorf("err = %v, want usageError", err)
+			}
+			if !strings.Contains(err.Error(), c.want) {
+				t.Errorf("message = %q, want it to contain %q", err.Error(), c.want)
 			}
 		})
 	}
@@ -99,5 +105,97 @@ func TestUnknownFlagIsUsageError(t *testing.T) {
 	var ue usageError
 	if !errors.As(err, &ue) {
 		t.Errorf("err = %v (%T), want usageError", err, err)
+	}
+}
+
+// TestFlagErrorPathsAreUsageErrors drives real pflag parse failures
+// through Execute — pflag's error fields are unexported, so the only
+// way to produce them is actual flag parsing.
+func TestFlagErrorPathsAreUsageErrors(t *testing.T) {
+	cases := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"long", []string{"--bogus"}, fmt.Sprintf(i18n.T("err.flag.unknownLong"), "bogus")},
+		{"short", []string{"-Z"}, fmt.Sprintf(i18n.T("err.flag.unknownShort"), "Z")},
+		{"longNeedsValue", []string{"--backend"}, fmt.Sprintf(i18n.T("err.flag.needsValue"), "backend")},
+		{"shortNeedsValue", []string{"clone", "demo", "-n"}, fmt.Sprintf(i18n.T("err.flag.needsValueShort"), "n")},
+		{"badSyntax", []string{"---bad"}, fmt.Sprintf(i18n.T("err.flag.badSyntax"), "---bad")},
+		{"invalidValue", []string{"--json=maybe"}, fmt.Sprintf(i18n.T("err.flag.invalidValue"), "json", "maybe")},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			root := NewRootCmd()
+			root.SetArgs(c.args)
+			err := root.Execute()
+			if err == nil {
+				t.Fatal("want error")
+			}
+			var ue usageError
+			if !errors.As(err, &ue) {
+				t.Errorf("err = %v (%T), want usageError", err, err)
+			}
+			if !strings.Contains(err.Error(), c.want) {
+				t.Errorf("message = %q, want it to contain %q", err.Error(), c.want)
+			}
+		})
+	}
+}
+
+// TestFlagErrorEnglish runs a subset under the English catalog to
+// prove the localized templates switch language too.
+func TestFlagErrorEnglish(t *testing.T) {
+	i18n.SetLang("en")
+	defer i18n.SetLang("zh")
+
+	root := NewRootCmd()
+	root.SetArgs([]string{"--bogus"})
+	err := root.Execute()
+	want := fmt.Sprintf(i18n.T("err.flag.unknownLong"), "bogus")
+	if err == nil || !strings.Contains(err.Error(), want) {
+		t.Errorf("err = %v, want to contain %q", err, want)
+	}
+}
+
+// TestRequiredFlagIsUsageError: clone/create required flags are
+// rejected during ValidateArgs, before cobra's English
+// ValidateRequiredFlags can run.
+func TestRequiredFlagIsUsageError(t *testing.T) {
+	cases := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"clone", "demo"}, fmt.Sprintf(i18n.T("err.flag.required"), "--name")},
+		{[]string{"create", "foo"}, fmt.Sprintf(i18n.T("err.flag.required"), "--from")},
+	}
+	for _, c := range cases {
+		root := NewRootCmd()
+		root.SetArgs(c.args)
+		err := root.Execute()
+		if err == nil {
+			t.Fatalf("%v: want error", c.args)
+		}
+		var ue usageError
+		if !errors.As(err, &ue) {
+			t.Errorf("%v: err = %v, want usageError", c.args, err)
+		}
+		if !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%v: message = %q, want it to contain %q", c.args, err.Error(), c.want)
+		}
+	}
+
+	// With the required flag present the usage check passes; the
+	// command then fails in the backend (an unresolvable VM name)
+	// with a non-usage error — asserting that requires no driver.
+	root := NewRootCmd()
+	root.SetArgs([]string{"clone", "no-such-vm-xyz", "--name", "copy"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("want backend error for missing VM")
+	}
+	var ue usageError
+	if errors.As(err, &ue) {
+		t.Errorf("required flag satisfied, must not be a usage error: %v", err)
 	}
 }

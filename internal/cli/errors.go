@@ -2,9 +2,11 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
 	"gitee.com/normalcoder/vmctl/internal/i18n"
@@ -22,33 +24,89 @@ type exitCodeError int
 
 func (e exitCodeError) Error() string { return "exit code" }
 
-// exactArgs wraps cobra.ExactArgs so argument-count mistakes become
-// usage errors.
+// exactArgs requires exactly n positional arguments. The wrappers are
+// implemented locally rather than wrapping cobra's validators so the
+// message is localized directly — cobra's English text never leaks.
 func exactArgs(n int) cobra.PositionalArgs {
-	return func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(n)(cmd, args); err != nil {
-			return usageError{err}
+	return func(_ *cobra.Command, args []string) error {
+		if len(args) != n {
+			return usageError{fmt.Errorf(i18n.T("err.args.exact"), n, len(args))}
 		}
 		return nil
 	}
 }
 
-// minimumNArgs wraps cobra.MinimumNArgs as a usage error.
+// minimumNArgs requires at least n positional arguments.
 func minimumNArgs(n int) cobra.PositionalArgs {
-	return func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MinimumNArgs(n)(cmd, args); err != nil {
-			return usageError{err}
+	return func(_ *cobra.Command, args []string) error {
+		if len(args) < n {
+			return usageError{fmt.Errorf(i18n.T("err.args.minimum"), n, len(args))}
 		}
 		return nil
 	}
 }
 
-// noArgs wraps cobra.NoArgs as a usage error.
+// noArgs rejects any positional argument.
 func noArgs(cmd *cobra.Command, args []string) error {
-	if err := cobra.NoArgs(cmd, args); err != nil {
-		return usageError{err}
+	if len(args) > 0 {
+		return usageError{fmt.Errorf(i18n.T("err.unknownCommand"), args[0], cmd.CommandPath())}
 	}
 	return nil
+}
+
+// requireFlags reports missing required flags as a usage error,
+// running during ValidateArgs — before cobra's own English
+// ValidateRequiredFlags check (which has no localization hook).
+func requireFlags(names ...string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, _ []string) error {
+		var missing []string
+		for _, n := range names {
+			if !cmd.Flags().Changed(n) {
+				missing = append(missing, "--"+n)
+			}
+		}
+		if len(missing) == 0 {
+			return nil
+		}
+		return usageError{fmt.Errorf(i18n.T("err.flag.required"), strings.Join(missing, ", "))}
+	}
+}
+
+// flagError translates pflag's typed parse errors into localized
+// usage errors. pflag passes its concrete types through ParseFlags
+// untouched, so the getters recover flag names without matching any
+// English message text; unrecognized errors pass through as-is.
+func flagError(_ *cobra.Command, err error) error {
+	if errors.Is(err, pflag.ErrHelp) {
+		return err
+	}
+	var ne *pflag.NotExistError
+	var vr *pflag.ValueRequiredError
+	var syn *pflag.InvalidSyntaxError
+	var inv *pflag.InvalidValueError
+	switch {
+	case errors.As(err, &ne):
+		if ne.GetSpecifiedShortnames() != "" {
+			return usageError{fmt.Errorf(i18n.T("err.flag.unknownShort"), ne.GetSpecifiedShortnames())}
+		}
+		return usageError{fmt.Errorf(i18n.T("err.flag.unknownLong"), ne.GetSpecifiedName())}
+	case errors.As(err, &vr):
+		if vr.GetSpecifiedShortnames() != "" {
+			return usageError{fmt.Errorf(i18n.T("err.flag.needsValueShort"), vr.GetSpecifiedShortnames())}
+		}
+		return usageError{fmt.Errorf(i18n.T("err.flag.needsValue"), vr.GetSpecifiedName())}
+	case errors.As(err, &syn):
+		return usageError{fmt.Errorf(i18n.T("err.flag.badSyntax"), syn.GetSpecifiedFlag())}
+	case errors.As(err, &inv):
+		name := ""
+		if f := inv.GetFlag(); f != nil {
+			name = f.Name
+		}
+		// The unwrapped cause is an English strconv error; drop it.
+		return usageError{fmt.Errorf(i18n.T("err.flag.invalidValue"), name, inv.GetValue())}
+	default:
+		return usageError{err}
+	}
 }
 
 // exitPlan describes how Execute turns an error into process exit.

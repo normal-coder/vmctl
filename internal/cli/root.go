@@ -74,10 +74,8 @@ func NewRootCmd() *cobra.Command {
 	pf.StringVar(&flagLang, "lang", "", i18n.T("flag.lang"))
 	rootFlags = pf
 
-	// Unknown or malformed flags are usage errors (exit 2).
-	root.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
-		return usageError{err}
-	})
+	// Unknown or malformed flags become localized usage errors (exit 2).
+	root.SetFlagErrorFunc(flagError)
 
 	root.AddCommand(
 		newListCmd(),

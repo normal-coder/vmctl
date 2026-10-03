@@ -22,7 +22,7 @@ func newCloneCmd() *cobra.Command {
 		Use:   "clone <vm>",
 		Short: i18n.T("cmd.clone.short"),
 		Long:  i18n.T("cmd.clone.long"),
-		Args:  exactArgs(1),
+		Args:  cobra.MatchAll(exactArgs(1), requireFlags("name")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
@@ -67,7 +67,7 @@ func newCreateCmd() *cobra.Command {
 		Use:   "create <name>",
 		Short: i18n.T("cmd.create.short"),
 		Long:  i18n.T("cmd.create.long"),
-		Args:  exactArgs(1),
+		Args:  cobra.MatchAll(exactArgs(1), requireFlags("from")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d, err := openDriver()
 			if err != nil {
