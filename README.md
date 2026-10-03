@@ -172,9 +172,11 @@ vmctl --lang en list --help     # 英文帮助
 | 码 | 含义 |
 |---|---|
 | `0` | 成功 |
-| `1` | 运行错误（后端失败、虚拟机不存在等，消息打到 stderr） |
-| `2` | 用法错误（未知 flag、参数个数不对；stderr 附带该命令的 usage） |
-| 其他 | `exec` 透传 guest 程序退出码，`shell` 透传 ssh 退出码 |
+| `1` | 运行错误（后端失败等，消息打到 stderr） |
+| `2` | 用法错误（**未知命令**、未知 flag、参数个数、缺必填项；stderr 附带该命令的 usage） |
+| `3` | 目标对象不存在（`ErrNotFound`，如找不到虚拟机） |
+| `4` | 后端不支持该操作（`ErrNotSupported`，如 vsphere 的 `pause`） |
+| 其他 | `exec` 透传 guest 程序退出码，`shell` 透传 ssh 退出码；**与 `3`/`4` 冲突时以透传为准**（已知权衡） |
 
 ## Shell 补全
 
@@ -219,7 +221,11 @@ inventory path（如 `DC0/vm/my-vm`）。0 命中报错并列出可用名称，�
 | `clone`/`create` 返回值 | vmx 文件路径 | inventory path（如 `DC0/vm/my-vm`） |
 | `pause` | 支持 | 不支持（用 `suspend` 挂起到磁盘） |
 | `snapshot revert` | 恢复快照时电源状态 | 回退后不自动开机（`suppressPowerOn`） |
-| `create` 无 `--from` | 报错 | `ErrNotSupported`（无法创建裸 VM，请用 `--from`） |
+| `create` 无 `--from` | 报错（exit 2，见下注） | 报错（exit 2，见下注） |
+
+> 注：`create` 缺 `--from` 由 CLI 校验在启动后端前拦截（exit 2，两后端一致）。
+> 驱动层的 `ErrNotSupported → 4` 是另一条路径：`--from=`（flag 已指定但值为空）、
+> 以及 vsphere 的 `pause`。
 
 > **验证程度**：vsphere 后端已通过 vcsim（govmomi 模拟器）集成测试覆盖库存、电源、
 > 克隆、快照与文案切换；**真实 vCenter / ESXi 尚未实测**，首次接入时建议先在测试
@@ -246,5 +252,5 @@ internal/model     与后端无关的 VM 模型
 - [x] M3：snapshot 全套 + guest exec + ip / shell
 - [x] M4：vsphere 后端（govmomi）+ profile 配置 + 多语言文案
 - [x] M5：vmcli 同名快照 fallback + 存量英文错误汉化回填 + shell 补全 + 退出码/用法错误打磨
-- [ ] M6（余项）：cobra Args 报错文案全量中文化、`snapshot list` 增加 uid 列、
+- [x] M6：cobra Args 报错文案全量中文化、`snapshot list` 增加 uid 列、
   version JSON 输出、退出码更细分类

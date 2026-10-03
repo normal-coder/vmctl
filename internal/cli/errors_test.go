@@ -13,27 +13,51 @@ import (
 	"gitee.com/normalcoder/vmctl/internal/i18n"
 )
 
-func TestPlanExitCarriedCodeSilent(t *testing.T) {
-	plan := planExit(exitCodeError(7))
-	if plan.code != 7 || plan.message != "" || plan.showUsage {
-		t.Errorf("planExit(exitCodeError(7)) = %+v, want code 7 silent", plan)
+// TestPlanExitCodes pins the exit-code priority table:
+// carried code > usage (2) > not found (3) > not supported (4) > 1.
+func TestPlanExitCodes(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        error
+		code       int
+		message    string // substring of plan.message; "" = no content check
+		wantSilent bool
+		showUsage  bool
+	}{
+		{"carried", exitCodeError(7), 7, "", true, false},
+		{"usage", usageError{errors.New("unknown flag: --bogus")}, 2, "--bogus", false, true},
+		{"usageOverNotFound", usageError{driver.WrapNotFound("找不到虚拟机 \"nope\"")}, 2, "", false, true},
+		{"notFound", driver.WrapNotFound("找不到虚拟机 \"nope\"（可用：a）"), 3, "nope", false, false},
+		{"notSupported", fmt.Errorf("%w: 因为 FFF", driver.ErrNotSupported), 4, i18n.T("err.notSupported"), false, false},
+		{"normal", errors.New("boom"), 1, "boom", false, false},
 	}
-}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			plan := planExit(c.err)
+			if plan.code != c.code {
+				t.Errorf("code = %d, want %d", plan.code, c.code)
+			}
+			if plan.showUsage != c.showUsage {
+				t.Errorf("showUsage = %v, want %v", plan.showUsage, c.showUsage)
+			}
+			if c.wantSilent {
+				if plan.message != "" {
+					t.Errorf("message = %q, want silent", plan.message)
+				}
+				return
+			}
+			if c.message != "" && !strings.Contains(plan.message, c.message) {
+				t.Errorf("message = %q, want it to contain %q", plan.message, c.message)
+			}
+		})
+	}
 
-func TestPlanExitUsageError(t *testing.T) {
-	plan := planExit(usageError{errors.New("unknown flag: --bogus")})
-	if plan.code != 2 || !plan.showUsage {
-		t.Errorf("planExit(usageError) = %+v, want code 2 with usage", plan)
+	// The English sentinel text must never leak into 3/4 messages.
+	if got := planExit(driver.WrapNotFound("找不到虚拟机 \"nope\"")); strings.Contains(got.message, driver.ErrNotFound.Error()) {
+		t.Errorf("notFound message leaked the sentinel: %q", got.message)
 	}
-	if !strings.Contains(plan.message, "--bogus") {
-		t.Errorf("message = %q, want the flag error text", plan.message)
-	}
-}
-
-func TestPlanExitNormalError(t *testing.T) {
-	plan := planExit(errors.New("boom"))
-	if plan.code != 1 || plan.showUsage || plan.message == "" {
-		t.Errorf("planExit(boom) = %+v, want code 1 with message", plan)
+	if got := planExit(fmt.Errorf("%w: x", driver.ErrNotSupported)); strings.Contains(got.message, driver.ErrNotSupported.Error()) {
+		t.Errorf("notSupported message leaked the sentinel: %q", got.message)
 	}
 }
 

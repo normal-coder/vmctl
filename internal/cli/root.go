@@ -33,7 +33,8 @@ var (
 
 // Execute runs the root command and maps errors to exit codes:
 // exitCodeError passes its code through silently, usage errors exit 2
-// with the command's usage, everything else exits 1.
+// with the command's usage, missing objects exit 3, backend-unsupported
+// operations exit 4, everything else exits 1.
 func Execute() {
 	// The command tree bakes translated help strings at build time, so
 	// the language must be resolved before NewRootCmd.

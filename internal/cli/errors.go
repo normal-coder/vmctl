@@ -157,8 +157,13 @@ type exitPlan struct {
 	showUsage bool
 }
 
-// planExit classifies a command error: a carried exit code (silent),
-// a usage error (code 2 + usage text) or a normal failure (code 1).
+// planExit classifies a command error in priority order: a carried
+// exit code passes through silently (guest/ssh status wins), a usage
+// error exits 2 with usage text, a missing object exits 3, an
+// unsupported operation exits 4, everything else exits 1. The last
+// three all print a friendly message with the English sentinels
+// stripped. A usageError wrapping a sentinel still exits 2 — usage
+// problems are decided first.
 func planExit(err error) exitPlan {
 	var ec exitCodeError
 	if errors.As(err, &ec) {
@@ -167,6 +172,12 @@ func planExit(err error) exitPlan {
 	var ue usageError
 	if errors.As(err, &ue) {
 		return exitPlan{code: 2, message: ue.Error(), showUsage: true}
+	}
+	switch {
+	case errors.Is(err, driver.ErrNotFound):
+		return exitPlan{code: 3, message: friendlyError(err).Error()}
+	case errors.Is(err, driver.ErrNotSupported):
+		return exitPlan{code: 4, message: friendlyError(err).Error()}
 	}
 	return exitPlan{code: 1, message: friendlyError(err).Error()}
 }
