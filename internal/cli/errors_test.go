@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -197,5 +198,138 @@ func TestRequiredFlagIsUsageError(t *testing.T) {
 	var ue usageError
 	if errors.As(err, &ue) {
 		t.Errorf("required flag satisfied, must not be a usage error: %v", err)
+	}
+}
+
+// --- unknown subcommand / built-in commands (stage B) ---
+
+func TestUnknownSubcommandSuggests(t *testing.T) {
+	root := NewRootCmd()
+	root.SetArgs([]string{"lst"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("want error")
+	}
+	var ue usageError
+	if !errors.As(err, &ue) {
+		t.Errorf("err = %v, want usageError", err)
+	}
+	want := fmt.Sprintf(i18n.T("err.unknownCommandSuggest"), "lst", "vmctl", "list")
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf("message = %q, want it to contain %q", err.Error(), want)
+	}
+}
+
+func TestUnknownSubcommandNoSuggest(t *testing.T) {
+	root := NewRootCmd()
+	root.SetArgs([]string{"zzzzzz"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("want error")
+	}
+	var ue usageError
+	if !errors.As(err, &ue) {
+		t.Errorf("err = %v, want usageError", err)
+	}
+	want := fmt.Sprintf(i18n.T("err.unknownCommand"), "zzzzzz", "vmctl")
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf("message = %q, want it to contain %q", err.Error(), want)
+	}
+}
+
+func TestBareRootPrintsHelp(t *testing.T) {
+	root := NewRootCmd()
+	var buf bytes.Buffer
+	root.SetOut(&buf)
+	root.SetArgs([]string{})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("bare root must print help and succeed: %v", err)
+	}
+	if !strings.Contains(buf.String(), "vmctl") {
+		t.Errorf("stdout = %q, want the help text", buf.String())
+	}
+}
+
+func TestSnapshotBogusArg(t *testing.T) {
+	root := NewRootCmd()
+	root.SetArgs([]string{"snapshot", "nope"})
+	err := root.Execute()
+	if err == nil {
+		t.Fatal("stray snapshot argument must error")
+	}
+	var ue usageError
+	if !errors.As(err, &ue) {
+		t.Errorf("err = %v, want usageError", err)
+	}
+	want := fmt.Sprintf(i18n.T("err.unknownCommand"), "nope", "vmctl snapshot")
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf("message = %q, want it to contain %q", err.Error(), want)
+	}
+}
+
+func TestHelpUnknownTopic(t *testing.T) {
+	t.Run("unknown", func(t *testing.T) {
+		root := NewRootCmd()
+		var buf bytes.Buffer
+		root.SetOut(&buf)
+		root.SetErr(&buf)
+		root.SetArgs([]string{"help", "nope"})
+		err := root.Execute()
+		if err == nil {
+			t.Fatal("unknown help topic must error (not silently print root help)")
+		}
+		var ue usageError
+		if !errors.As(err, &ue) {
+			t.Errorf("err = %v, want usageError", err)
+		}
+		want := fmt.Sprintf(i18n.T("err.help.unknownTopic"), "nope")
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("message = %q, want it to contain %q", err.Error(), want)
+		}
+	})
+	t.Run("known topic", func(t *testing.T) {
+		root := NewRootCmd()
+		var buf bytes.Buffer
+		root.SetOut(&buf)
+		root.SetArgs([]string{"help", "list"})
+		if err := root.Execute(); err != nil {
+			t.Fatalf("help list: %v", err)
+		}
+		if !strings.Contains(buf.String(), i18n.T("cmd.list.short")) {
+			t.Errorf("stdout = %q, want list help", buf.String())
+		}
+	})
+	t.Run("bare help", func(t *testing.T) {
+		root := NewRootCmd()
+		var buf bytes.Buffer
+		root.SetOut(&buf)
+		root.SetArgs([]string{"help"})
+		if err := root.Execute(); err != nil {
+			t.Fatalf("bare help: %v", err)
+		}
+		if buf.Len() == 0 {
+			t.Error("bare help must print usage")
+		}
+	})
+}
+
+func TestHelpLocalized(t *testing.T) {
+	for _, lang := range []string{i18n.ZH, i18n.EN} {
+		t.Run(lang, func(t *testing.T) {
+			i18n.SetLang(lang)
+			t.Cleanup(func() { i18n.SetLang(i18n.ZH) })
+
+			root := NewRootCmd()
+			for _, cmd := range root.Commands() {
+				if cmd.Name() != "help" {
+					continue
+				}
+				if cmd.Short != i18n.T("cmd.help.short") {
+					t.Errorf("help short = %q, want %q", cmd.Short, i18n.T("cmd.help.short"))
+				}
+				return
+			}
+			t.Fatal("help command not registered")
+		})
 	}
 }

@@ -109,6 +109,47 @@ func flagError(_ *cobra.Command, err error) error {
 	}
 }
 
+// rootArgs rejects unknown subcommands. Once root.Args is set, cobra's
+// Find stops consulting legacyArgs, so this is the single place a
+// misspelled top-level command is caught — as a localized usage error.
+func rootArgs(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return nil
+	}
+	return usageError{unknownCommandErr(cmd, args[0])}
+}
+
+// unknownCommandErr formats a localized "unknown command" error,
+// appending did-you-mean suggestions when cobra's matcher finds any.
+func unknownCommandErr(cmd *cobra.Command, arg string) error {
+	if cmd.SuggestionsMinimumDistance <= 0 {
+		cmd.SuggestionsMinimumDistance = 2 // same guard cobra applies internally
+	}
+	sugg := cmd.SuggestionsFor(arg)
+	if len(sugg) == 0 {
+		return fmt.Errorf(i18n.T("err.unknownCommand"), arg, cmd.CommandPath())
+	}
+	return fmt.Errorf(i18n.T("err.unknownCommandSuggest"), arg, cmd.CommandPath(),
+		strings.Join(sugg, "\n  "))
+}
+
+// helpArgs mirrors the built-in help command's Find lookup: a topic
+// that falls back to the root (and isn't the root itself) is unknown.
+// Without this, setting root.Args would make cobra silently print the
+// root help for `vmctl help nope` instead of reporting the miss.
+func helpArgs(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return nil
+	}
+	root := cmd.Root()
+	found, _, err := root.Find(args)
+	if err != nil ||
+		(found == root && args[0] != root.Name() && !root.HasAlias(args[0])) {
+		return usageError{fmt.Errorf(i18n.T("err.help.unknownTopic"), args[0])}
+	}
+	return nil
+}
+
 // exitPlan describes how Execute turns an error into process exit.
 type exitPlan struct {
 	code      int

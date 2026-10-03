@@ -14,6 +14,12 @@ func newSnapshotCmd() *cobra.Command {
 		Use:   "snapshot",
 		Short: i18n.T("cmd.snapshot.short"),
 		Long:  i18n.T("cmd.snapshot.long"),
+		// Paired with Run so a stray argument is a usage error
+		// instead of being silently swallowed by a help print.
+		Args: noArgs,
+		Run: func(cmd *cobra.Command, _ []string) {
+			_ = cmd.Help()
+		},
 	}
 	c.AddCommand(
 		newSnapshotListCmd(),

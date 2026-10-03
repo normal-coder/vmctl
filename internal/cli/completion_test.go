@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,6 +127,50 @@ func TestCompletionCommandLocalized(t *testing.T) {
 			}
 			if !found {
 				t.Fatal("completion command not registered")
+			}
+		})
+	}
+}
+
+// TestCompletionArgsLocalized: stray arguments on the completion
+// command and its shell subcommands are localized usage errors, while
+// a plain script generation still succeeds.
+func TestCompletionArgsLocalized(t *testing.T) {
+	cases := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{"motherExtra", []string{"completion", "extra"}, true},
+		{"shellExtra", []string{"completion", "bash", "extra"}, true},
+		{"shellOk", []string{"completion", "bash"}, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			root := NewRootCmd()
+			var buf bytes.Buffer
+			root.SetOut(&buf)
+			root.SetErr(&buf)
+			root.SetArgs(c.args)
+			err := root.Execute()
+			if !c.wantErr {
+				if err != nil {
+					t.Fatalf("%v: %v", c.args, err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("%v: want error", c.args)
+			}
+			var ue usageError
+			if !errors.As(err, &ue) {
+				t.Errorf("err = %v, want usageError", err)
+			}
+			parts := append([]string{"vmctl"}, c.args[:len(c.args)-1]...)
+			want := fmt.Sprintf(i18n.T("err.unknownCommand"), c.args[len(c.args)-1],
+				strings.Join(parts, " "))
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("message = %q, want it to contain %q", err.Error(), want)
 			}
 		})
 	}

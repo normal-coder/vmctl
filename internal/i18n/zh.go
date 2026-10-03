@@ -83,16 +83,23 @@ var zhCatalog = map[string]string{
 	"err.notSupported": "此操作该后端不支持",
 
 	// usage (cobra args / pflag flags)
-	"err.args.exact":           "需要 %d 个参数，实际收到 %d 个",
-	"err.args.minimum":         "至少需要 %d 个参数，实际收到 %d 个",
-	"err.unknownCommand":       "未知命令 %q（%s）",
-	"err.flag.unknownLong":     "未知选项 --%s",
-	"err.flag.unknownShort":    "未知短选项 -%s",
-	"err.flag.needsValue":      "选项 --%s 缺少参数值",
-	"err.flag.needsValueShort": "短选项 -%s 缺少参数值",
-	"err.flag.badSyntax":       "选项写法无效：%s",
-	"err.flag.invalidValue":    "选项 --%s 的取值 %q 无效",
-	"err.flag.required":        "缺少必填选项：%s",
+	"err.args.exact":            "需要 %d 个参数，实际收到 %d 个",
+	"err.args.minimum":          "至少需要 %d 个参数，实际收到 %d 个",
+	"err.unknownCommand":        "未知命令 %q（%s）",
+	"err.unknownCommandSuggest": "未知命令 %q（%s）\n\n你是不是想用：\n  %s",
+	"err.flag.unknownLong":      "未知选项 --%s",
+	"err.flag.unknownShort":     "未知短选项 -%s",
+	"err.flag.needsValue":       "选项 --%s 缺少参数值",
+	"err.flag.needsValueShort":  "短选项 -%s 缺少参数值",
+	"err.flag.badSyntax":        "选项写法无效：%s",
+	"err.flag.invalidValue":     "选项 --%s 的取值 %q 无效",
+	"err.flag.required":         "缺少必填选项：%s",
+	"err.help.unknownTopic":     "未知的帮助主题 %q",
+
+	// help
+	"cmd.help.short": "显示命令的帮助",
+	"cmd.help.long":  "显示任意命令的帮助。用法：vmctl help [命令]",
+	"flag.help":      "显示 %s 的帮助",
 
 	// list / info
 	"cmd.list.short": "列出虚拟机",

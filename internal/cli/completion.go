@@ -108,10 +108,17 @@ func localizeCompletion(root *cobra.Command) {
 	}
 	c.Short = i18n.T("cmd.completion.short")
 	c.Long = i18n.T("cmd.completion.long")
+	// Runnable + Args so stray arguments become usage errors instead
+	// of silently printing help (cobra skips Args on non-runnables).
+	c.Args = noArgs
+	c.Run = func(cmd *cobra.Command, _ []string) {
+		_ = cmd.Help()
+	}
 	for _, sub := range c.Commands() {
 		switch sub.Name() {
 		case "bash", "zsh", "fish", "powershell":
 			sub.Short = i18n.T("cmd.completion." + sub.Name())
+			sub.Args = noArgs
 		}
 	}
 }

@@ -56,9 +56,15 @@ func Execute() {
 // NewRootCmd builds the vmctl command tree.
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:           "vmctl",
-		Short:         i18n.T("root.short"),
-		Long:          i18n.T("root.long"),
+		Use:   "vmctl",
+		Short: i18n.T("root.short"),
+		Long:  i18n.T("root.long"),
+		// Args must be paired with Run: cobra skips ValidateArgs on
+		// non-runnable commands, and a bare `vmctl` prints help here.
+		Args: rootArgs,
+		Run: func(cmd *cobra.Command, _ []string) {
+			_ = cmd.Help()
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -98,5 +104,6 @@ func NewRootCmd() *cobra.Command {
 	)
 	registerCompletions(root)
 	localizeCompletion(root)
+	localizeHelp(root)
 	return root
 }
