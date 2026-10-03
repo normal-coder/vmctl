@@ -99,6 +99,13 @@ delete Clone#2: 成功
   也可在 profile 中配置 `vmcli_path`。
 - 没有同名冲突时行为不变（仍走 vmrun 按名操作）；vmrun/vmcli 自身的
   错误消息为英文原文透传。
+- `vmctl snapshot list` 输出带 **UID 列**（`--json` 对应 `uid` 字段）：
+  - **vmrun**：UID 来自 `vmcli Snapshot query`，与 `名字#uid` 引用同源。
+    vmcli 缺失、执行失败或输出无法识别时自动降级为 vmrun 普通列表，
+    UID 显示 `-`——列表本身绝不因此失败。
+  - **vsphere**：UID 是快照的 ManagedObjectReference value（如
+    `snapshot-42`），可直接粘给 `snapshot delete` / `snapshot revert`
+    当名字用（govmomi 按 value 查找，唯一确定）。
 
 ## 配置文件
 

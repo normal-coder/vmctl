@@ -38,4 +38,8 @@ type Snapshot struct {
 	// Depth is the nesting level (0 = root). Set when the backend
 	// reports hierarchy; flat listings use 0 for every entry.
 	Depth int `json:"depth,omitempty"`
+	// UID identifies the snapshot within its backend: the vmcli uid
+	// for vmrun, the ManagedObjectReference value for vsphere. Empty
+	// when the backend cannot report one (rendered as "-").
+	UID string `json:"uid,omitempty"`
 }

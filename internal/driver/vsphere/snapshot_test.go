@@ -1,6 +1,7 @@
 package vsphere
 
 import (
+	"strings"
 	"testing"
 
 	"gitee.com/normalcoder/vmctl/internal/driver"
@@ -36,6 +37,13 @@ func TestSnapshotsTreeAndFlat(t *testing.T) {
 	if len(tree) != 2 || tree[0].Name != "a" || tree[0].Depth != 0 || tree[1].Name != "b" || tree[1].Depth != 1 {
 		t.Errorf("tree = %+v, want a@0 then b@1", tree)
 	}
+	// UIDs are MoRef values ("snapshot-N" in vcsim) — non-empty and
+	// shaped so they can be pasted back into delete/revert.
+	for _, s := range tree {
+		if !strings.HasPrefix(s.UID, "snapshot-") {
+			t.Errorf("uid = %q, want a snapshot- MoRef value", s.UID)
+		}
+	}
 
 	flat, err := d.Snapshots(ctx, vm.Name, false)
 	if err != nil {
@@ -45,6 +53,38 @@ func TestSnapshotsTreeAndFlat(t *testing.T) {
 		if s.Depth != 0 {
 			t.Errorf("flat listing depth = %d, want 0 (%s)", s.Depth, s.Name)
 		}
+		if s.UID == "" {
+			t.Errorf("flat listing must keep the uid (%s)", s.Name)
+		}
+	}
+}
+
+// TestSnapshotDeleteByUID: the UID from the listing is a snapshot
+// ManagedObjectReference value — govmomi's FindSnapshot resolves it,
+// so pasting it into delete just works.
+func TestSnapshotDeleteByUID(t *testing.T) {
+	d, ctx := newSim(t)
+	vm := firstVM(t, d, ctx)
+	if err := d.SnapshotCreate(ctx, vm.Name, "s1"); err != nil {
+		t.Fatal(err)
+	}
+	tree, err := d.Snapshots(ctx, vm.Name, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tree) != 1 || tree[0].UID == "" {
+		t.Fatalf("want one snapshot with a uid, got %+v", tree)
+	}
+
+	if err := d.SnapshotDelete(ctx, vm.Name, tree[0].UID, false); err != nil {
+		t.Fatalf("delete by uid %q: %v", tree[0].UID, err)
+	}
+	after, err := d.Snapshots(ctx, vm.Name, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(after) != 0 {
+		t.Errorf("want the snapshot gone, got %+v", after)
 	}
 }
 

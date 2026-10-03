@@ -82,6 +82,35 @@ func TestParseVMCliSnapshots(t *testing.T) {
 	}
 }
 
+// The marker gates query results: vmcli exits 0 with unrelated text
+// for input it does not recognize, so only the "snapshots:" line
+// proves this is a real query document.
+func TestParseVMCliQueryMarker(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want bool
+	}{
+		{"fixture", vmcliQueryFixture, true},
+		{"markerOnly", "currentUID: 0\nsnapshots:\n", true}, // valid empty result
+		{"noMarker", "currentUID: 1\nhelperUID: 0\n", false},
+		{"garbage", "vmcli: I do not understand", false},
+		{"empty", "", false},
+	}
+	for _, c := range cases {
+		snaps, ok := parseVMCliQuery(c.in)
+		if ok != c.want {
+			t.Errorf("%s: ok = %v, want %v", c.name, ok, c.want)
+		}
+		if c.want && c.name == "fixture" && len(snaps) != 4 {
+			t.Errorf("fixture entries = %d, want 4", len(snaps))
+		}
+		if c.name == "markerOnly" && len(snaps) != 0 {
+			t.Errorf("marker-only entries = %+v, want none", snaps)
+		}
+	}
+}
+
 // --- locateVMCli -------------------------------------------------------
 
 func TestLocateVMCliOverride(t *testing.T) {

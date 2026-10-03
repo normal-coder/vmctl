@@ -37,7 +37,11 @@ func (d *Driver) Snapshots(ctx context.Context, ref string, tree bool) ([]model.
 			if tree {
 				d = depth
 			}
-			out = append(out, model.Snapshot{Name: nodes[i].Name, Depth: d})
+			// The MoRef value ("snapshot-42" in vcsim) — the same key
+			// govmomi's FindSnapshot resolves, so it can be pasted
+			// straight into delete/revert. Empty when unset.
+			uid := nodes[i].Snapshot.Value
+			out = append(out, model.Snapshot{Name: nodes[i].Name, Depth: d, UID: uid})
 			walk(nodes[i].ChildSnapshotList, depth+1)
 		}
 	}

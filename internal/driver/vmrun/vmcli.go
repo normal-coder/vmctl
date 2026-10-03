@@ -45,7 +45,7 @@ type vmcliSnapshot struct {
 	UID       int
 }
 
-// parseVMCliSnapshots decodes `vmcli <vmx> Snapshot query` output
+// parseVMCliQuery decodes `vmcli <vmx> Snapshot query` output
 // (default YAML-ish style):
 //
 //	currentUID: 5
@@ -54,8 +54,12 @@ type vmcliSnapshot struct {
 //	  - displayName: Clone
 //	    parentUID: 0
 //	    uid: 1
-func parseVMCliSnapshots(out string) []vmcliSnapshot {
-	var snaps []vmcliSnapshot
+//
+// ok reports whether the document contained the "snapshots:" marker
+// — the only reliable signal that this is a real query result. vmcli
+// happily exits 0 with unrelated text for input it does not
+// recognize, so absence of the marker must trigger a fallback.
+func parseVMCliQuery(out string) (snaps []vmcliSnapshot, ok bool) {
 	var cur *vmcliSnapshot
 	inList := false
 	for _, line := range strings.Split(out, "\n") {
@@ -65,12 +69,13 @@ func parseVMCliSnapshots(out string) []vmcliSnapshot {
 		}
 		if trimmed == "snapshots:" {
 			inList = true
+			ok = true
 			continue
 		}
 		if !inList {
 			continue
 		}
-		if rest, ok := strings.CutPrefix(trimmed, "- "); ok {
+		if rest, isEntry := strings.CutPrefix(trimmed, "- "); isEntry {
 			trimmed = rest
 			snaps = append(snaps, vmcliSnapshot{})
 			cur = &snaps[len(snaps)-1]
@@ -78,8 +83,8 @@ func parseVMCliSnapshots(out string) []vmcliSnapshot {
 		if cur == nil {
 			continue
 		}
-		key, val, ok := strings.Cut(trimmed, ":")
-		if !ok {
+		key, val, hasKV := strings.Cut(trimmed, ":")
+		if !hasKV {
 			continue
 		}
 		val = strings.TrimSpace(val)
@@ -96,6 +101,13 @@ func parseVMCliSnapshots(out string) []vmcliSnapshot {
 			}
 		}
 	}
+	return snaps, ok
+}
+
+// parseVMCliSnapshots is parseVMCliQuery without the marker check,
+// for callers that only need the entries.
+func parseVMCliSnapshots(out string) []vmcliSnapshot {
+	snaps, _ := parseVMCliQuery(out)
 	return snaps
 }
 

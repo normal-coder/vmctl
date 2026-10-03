@@ -2,7 +2,9 @@ package vmrun
 
 import (
 	"context"
+	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -82,6 +84,9 @@ func TestSnapshotCreateSurfacesExitZeroError(t *testing.T) {
 
 func TestSnapshotsListing(t *testing.T) {
 	d, fake, _ := newTestEnv(t)
+	// Pin vmcli to a missing path: without it, a dev machine with
+	// Fusion installed would run a vmcli query against the fake vmx.
+	d.vmcliPath = filepath.Join(t.TempDir(), "missing-vmcli")
 	fake.respond = func(args []string) (string, error) {
 		return "Total snapshots: 2\nbase\n\tderived\n", nil
 	}
@@ -92,8 +97,184 @@ func TestSnapshotsListing(t *testing.T) {
 	if len(snaps) != 2 || snaps[1].Name != "derived" || snaps[1].Depth != 1 {
 		t.Errorf("snaps: %+v", snaps)
 	}
+	for _, s := range snaps {
+		if s.UID != "" {
+			t.Errorf("fallback listing must carry no uid: %+v", s)
+		}
+	}
 	if !strings.Contains(strings.Join(fake.lastArgs(), " "), "showTree") {
 		t.Errorf("tree flag not passed: %v", fake.lastArgs())
+	}
+}
+
+// --- vmcli query listing (stage C) ------------------------------------
+
+// TestSnapshotsQueryPreferred: with vmcli answering a query, the
+// listing comes entirely from it — uids, tree depths, no listSnapshots.
+func TestSnapshotsQueryPreferred(t *testing.T) {
+	d, fake, _ := newTestEnv(t)
+	listCalled := false
+	fake.respond = func(args []string) (string, error) {
+		if a := stripHostType(args); len(a) > 0 && a[0] == "listSnapshots" {
+			listCalled = true
+			return "Total snapshots: 1\nstale\n", nil
+		}
+		return "", nil
+	}
+	stubVMCli(d, fake, func([]string) (string, error) { return vmcliQueryFixture, nil })
+
+	snaps, err := d.Snapshots(context.Background(), "demo-two", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantNames := []string{"Clone", "Clone", "base", "Clone"}
+	wantUIDs := []string{"1", "2", "3", "5"}
+	wantDepths := []int{0, 1, 2, 3}
+	if len(snaps) != len(wantNames) {
+		t.Fatalf("snaps = %+v, want %d entries", snaps, len(wantNames))
+	}
+	for i := range snaps {
+		if snaps[i].Name != wantNames[i] || snaps[i].UID != wantUIDs[i] || snaps[i].Depth != wantDepths[i] {
+			t.Errorf("snap[%d] = %+v, want %s/%s@%d",
+				i, snaps[i], wantNames[i], wantUIDs[i], wantDepths[i])
+		}
+	}
+	if listCalled {
+		t.Error("query must win: listSnapshots must not run")
+	}
+}
+
+// Flat listings keep the uids but flatten every depth to 0.
+func TestSnapshotsQueryFlatDepthZero(t *testing.T) {
+	d, fake, _ := newTestEnv(t)
+	stubVMCli(d, fake, func([]string) (string, error) { return vmcliQueryFixture, nil })
+
+	snaps, err := d.Snapshots(context.Background(), "demo-two", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snaps) != 4 {
+		t.Fatalf("snaps = %+v, want 4 entries", snaps)
+	}
+	for _, s := range snaps {
+		if s.Depth != 0 {
+			t.Errorf("flat listing depth = %d for %q, want 0", s.Depth, s.Name)
+		}
+		if s.UID == "" {
+			t.Errorf("flat listing must keep uids: %+v", s)
+		}
+	}
+}
+
+// TestSnapshotsQueryFallback: vmcli errors or unrecognizable output
+// silently fall back to listSnapshots — the listing never fails.
+func TestSnapshotsQueryFallback(t *testing.T) {
+	cases := []struct {
+		name    string
+		vmcli   func([]string) (string, error)
+		wantErr bool
+	}{
+		{"OnError", func([]string) (string, error) { return "", errors.New("vmcli exploded") }, false},
+		{"OnNoMarker", func([]string) (string, error) { return "vmcli: I do not understand", nil }, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d, fake, _ := newTestEnv(t)
+			fake.respond = func(args []string) (string, error) {
+				if a := stripHostType(args); len(a) > 0 && a[0] == "listSnapshots" {
+					return "Total snapshots: 2\nbase\n\tderived\n", nil
+				}
+				return "", nil
+			}
+			stubVMCli(d, fake, c.vmcli)
+
+			snaps, err := d.Snapshots(context.Background(), "demo-two", true)
+			if (err != nil) != c.wantErr {
+				t.Fatalf("err = %v, wantErr = %v", err, c.wantErr)
+			}
+			if err != nil {
+				return
+			}
+			if len(snaps) != 2 || snaps[1].Name != "derived" || snaps[1].Depth != 1 {
+				t.Errorf("fallback snaps = %+v", snaps)
+			}
+			for _, s := range snaps {
+				if s.UID != "" {
+					t.Errorf("fallback must carry no uid: %+v", s)
+				}
+			}
+		})
+	}
+}
+
+// Marker present but zero entries is a valid empty result — no fallback.
+func TestSnapshotsQueryEmptySuccess(t *testing.T) {
+	d, fake, _ := newTestEnv(t)
+	listCalled := false
+	fake.respond = func(args []string) (string, error) {
+		if a := stripHostType(args); len(a) > 0 && a[0] == "listSnapshots" {
+			listCalled = true
+		}
+		return "", nil
+	}
+	stubVMCli(d, fake, func([]string) (string, error) { return "currentUID: 0\nsnapshots:\n", nil })
+
+	snaps, err := d.Snapshots(context.Background(), "demo-two", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snaps) != 0 {
+		t.Errorf("snaps = %+v, want empty", snaps)
+	}
+	if listCalled {
+		t.Error("a valid empty query must not fall back to listSnapshots")
+	}
+}
+
+// Entries without a single usable uid mean the format drifted — fall back.
+func TestSnapshotsQueryFallbackAllInvalidUID(t *testing.T) {
+	d, fake, _ := newTestEnv(t)
+	fake.respond = func(args []string) (string, error) {
+		if a := stripHostType(args); len(a) > 0 && a[0] == "listSnapshots" {
+			return "Total snapshots: 1\nbase\n", nil
+		}
+		return "", nil
+	}
+	junk := "snapshots:\n  - displayName: x\n    uid: not-a-number\n"
+	stubVMCli(d, fake, func([]string) (string, error) { return junk, nil })
+
+	snaps, err := d.Snapshots(context.Background(), "demo-two", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snaps) != 1 || snaps[0].Name != "base" {
+		t.Errorf("snaps = %+v, want the listSnapshots fallback", snaps)
+	}
+}
+
+func TestSnapshotDepth(t *testing.T) {
+	parents := map[int]int{1: 0, 2: 1, 3: 2, 5: 3}
+	cases := []struct {
+		name string
+		snap vmcliSnapshot
+		want int
+	}{
+		{"root", vmcliSnapshot{UID: 1, ParentUID: 0}, 0},
+		{"child", vmcliSnapshot{UID: 2, ParentUID: 1}, 1},
+		{"deep", vmcliSnapshot{UID: 5, ParentUID: 3}, 3},
+		{"brokenLink", vmcliSnapshot{UID: 9, ParentUID: 99}, 0}, // parent unknown
+		{"selfRef", vmcliSnapshot{UID: 3, ParentUID: 3}, 0},
+	}
+	for _, c := range cases {
+		if got := snapshotDepth(c.snap, parents); got != c.want {
+			t.Errorf("%s: depth = %d, want %d", c.name, got, c.want)
+		}
+	}
+
+	// A cycle not containing the queried node must still terminate.
+	cycle := map[int]int{1: 2, 2: 1}
+	if got := snapshotDepth(vmcliSnapshot{UID: 3, ParentUID: 1}, cycle); got != 2 {
+		t.Errorf("cycle depth = %d, want the walk to stop after two hops", got)
 	}
 }
 

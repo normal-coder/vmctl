@@ -95,9 +95,9 @@ func PrintSnapshots(w io.Writer, ref string, snaps []model.Snapshot, asJSON bool
 		return err
 	}
 	t := newTable()
-	t.AppendHeader(table.Row{"#", "NAME"})
+	t.AppendHeader(table.Row{"#", "NAME", "UID"})
 	for i, s := range snaps {
-		t.AppendRow(table.Row{i + 1, strings.Repeat("  ", s.Depth) + s.Name})
+		t.AppendRow(table.Row{i + 1, strings.Repeat("  ", s.Depth) + s.Name, valueOrDash(s.UID)})
 	}
 	_, err := fmt.Fprintln(w, t.Render())
 	return err

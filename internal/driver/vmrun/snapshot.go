@@ -11,11 +11,19 @@ import (
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
-// Snapshots implements driver.Driver.
+// Snapshots implements driver.Driver. A vmcli query is preferred —
+// it is the only source of snapshot uids — but it is optional
+// enrichment: when vmcli is missing, fails, or its output is not a
+// recognizable query result, the listing silently falls back to
+// vmrun's own listSnapshots (no uids, entries shown as "-"). A
+// listing never fails because vmcli is unavailable.
 func (d *Driver) Snapshots(ctx context.Context, ref string, tree bool) ([]model.Snapshot, error) {
 	path, err := d.resolve(ref)
 	if err != nil {
 		return nil, err
+	}
+	if snaps, ok := d.snapshotQuery(ctx, path, tree); ok {
+		return snaps, nil
 	}
 	args := []string{"listSnapshots", path}
 	if tree {
@@ -26,6 +34,80 @@ func (d *Driver) Snapshots(ctx context.Context, ref string, tree bool) ([]model.
 		return nil, err
 	}
 	return parseSnapshotList(out), nil
+}
+
+// snapshotQuery lists snapshots via `vmcli <vmx> Snapshot query`.
+// ok=false means the caller must fall back to listSnapshots.
+func (d *Driver) snapshotQuery(ctx context.Context, path string, tree bool) ([]model.Snapshot, bool) {
+	out, err := d.vmcliExec(ctx, path, "Snapshot", "query")
+	if err != nil {
+		return nil, false
+	}
+	raw, ok := parseVMCliQuery(out)
+	if !ok {
+		return nil, false
+	}
+	if len(raw) > 0 && !anyValidUID(raw) {
+		// Entries exist but none carries a usable uid — vmcli's
+		// output drifted from what we parse. Treat it as junk.
+		return nil, false
+	}
+
+	parents := make(map[int]int, len(raw))
+	for _, s := range raw {
+		if s.UID >= 1 {
+			parents[s.UID] = s.ParentUID
+		}
+	}
+	snaps := make([]model.Snapshot, 0, len(raw))
+	for _, s := range raw {
+		if s.UID < 1 {
+			continue // helper/invalid entries are not addressable
+		}
+		depth := 0
+		if tree {
+			depth = snapshotDepth(s, parents)
+		}
+		snaps = append(snaps, model.Snapshot{
+			Name:  s.Name,
+			Depth: depth,
+			UID:   strconv.Itoa(s.UID),
+		})
+	}
+	return snaps, true
+}
+
+// anyValidUID reports whether at least one entry has a usable uid.
+func anyValidUID(snaps []vmcliSnapshot) bool {
+	for _, s := range snaps {
+		if s.UID >= 1 {
+			return true
+		}
+	}
+	return false
+}
+
+// snapshotDepth follows s's parentUID chain to the root (parentUID 0).
+// An unknown parent, a self reference or a cycle stops the walk at the
+// current level — vmcli output is trusted only so far, and a listing
+// must terminate.
+func snapshotDepth(s vmcliSnapshot, parents map[int]int) int {
+	depth := 0
+	seen := map[int]bool{s.UID: true}
+	p := s.ParentUID
+	for p > 0 {
+		if seen[p] {
+			break
+		}
+		seen[p] = true
+		next, ok := parents[p]
+		if !ok {
+			break
+		}
+		depth++
+		p = next
+	}
+	return depth
 }
 
 // parseSnapshotList decodes `vmrun listSnapshots` output:

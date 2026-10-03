@@ -136,6 +136,10 @@ type Driver interface {
 	// Snapshot operations.
 	// Snapshots lists the snapshots of the VM matching ref. With
 	// tree=true the backend reports hierarchy via Snapshot.Depth.
+	// Snapshot.UID is optional enrichment (for disambiguation and
+	// paste-back references): a backend that cannot provide it must
+	// leave the field empty — a listing never fails because uid
+	// information is unavailable.
 	Snapshots(ctx context.Context, ref string, tree bool) ([]model.Snapshot, error)
 	// SnapshotCreate creates a snapshot with the given name.
 	SnapshotCreate(ctx context.Context, ref, name string) error
