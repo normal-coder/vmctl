@@ -90,3 +90,28 @@ func TestPrintSnapshotsEmpty(t *testing.T) {
 		t.Errorf("output %q, want %q", buf.String(), want)
 	}
 }
+
+func TestPrintVersion(t *testing.T) {
+	t.Run("text", func(t *testing.T) {
+		var buf bytes.Buffer
+		if err := PrintVersion(&buf, "1.2.3", false); err != nil {
+			t.Fatal(err)
+		}
+		if buf.String() != "vmctl 1.2.3\n" {
+			t.Errorf("output = %q, want %q", buf.String(), "vmctl 1.2.3\n")
+		}
+	})
+	t.Run("json", func(t *testing.T) {
+		var buf bytes.Buffer
+		if err := PrintVersion(&buf, "1.2.3", true); err != nil {
+			t.Fatal(err)
+		}
+		var got map[string]string
+		if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+			t.Fatalf("decode %q: %v", buf.String(), err)
+		}
+		if len(got) != 1 || got["version"] != "1.2.3" {
+			t.Errorf("payload = %v, want exactly {version:1.2.3}", got)
+		}
+	})
+}

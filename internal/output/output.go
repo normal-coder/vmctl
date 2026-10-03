@@ -120,6 +120,15 @@ func PrintExec(w io.Writer, ref, script, out string, code int) error {
 	})
 }
 
+// PrintVersion renders the version as a plain line or JSON.
+func PrintVersion(w io.Writer, version string, asJSON bool) error {
+	if asJSON {
+		return writeJSON(w, map[string]string{"version": version})
+	}
+	_, err := fmt.Fprintf(w, "vmctl %s\n", version)
+	return err
+}
+
 func writeJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")

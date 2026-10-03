@@ -1,11 +1,10 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"gitee.com/normalcoder/vmctl/internal/i18n"
+	"gitee.com/normalcoder/vmctl/internal/output"
 )
 
 func newVersionCmd() *cobra.Command {
@@ -13,8 +12,8 @@ func newVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: i18n.T("cmd.version.short"),
 		Args:  noArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(cmd.OutOrStdout(), "vmctl %s\n", Version)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return output.PrintVersion(cmd.OutOrStdout(), Version, flagJSON)
 		},
 	}
 }

@@ -70,6 +70,10 @@ vmctl ip <vm> [--wait]
 # 通过 SSH 进入 guest（需 guest 开启 sshd）
 vmctl shell <vm> [--user u] [--port 22] [-i key] [--wait] [--dry-run]
 vmctl shell <vm> -- -v                    # -- 之后透传给 ssh
+
+# 版本信息
+vmctl version
+vmctl version --json
 ```
 
 `<vm>` 支持多种引用方式：
