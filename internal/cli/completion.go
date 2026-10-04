@@ -118,7 +118,11 @@ func localizeCompletion(root *cobra.Command) {
 		switch sub.Name() {
 		case "bash", "zsh", "fish", "powershell":
 			sub.Short = i18n.T("cmd.completion." + sub.Name())
+			sub.Long = i18n.T("cmd.completion." + sub.Name() + "Long")
 			sub.Args = noArgs
+			if f := sub.Flags().Lookup("no-descriptions"); f != nil {
+				f.Usage = i18n.T("flag.completion.noDesc")
+			}
 		}
 	}
 }

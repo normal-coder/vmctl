@@ -105,7 +105,9 @@ func flagError(_ *cobra.Command, err error) error {
 		// The unwrapped cause is an English strconv error; drop it.
 		return usageError{fmt.Errorf(i18n.T("err.flag.invalidValue"), name, inv.GetValue())}
 	default:
-		return usageError{err}
+		// Any other pflag failure carries English text only; wrap it
+		// in a localized prefix so the line never reads as raw English.
+		return usageError{fmt.Errorf(i18n.T("err.flag.generic"), err)}
 	}
 }
 
