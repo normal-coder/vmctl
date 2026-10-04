@@ -1,0 +1,40 @@
+# git-cliff ~ configuration file
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}\
+- {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+{% if commit.breaking %}[**breaking**] {% endif %}\
+{{ commit.message | upper_first }}
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+render_always = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+protect_breaking_commits = true
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->🚀 Features" },
+    { message = "^fix|^perf", group = "<!-- 1 -->🐛 Bug Fixes" },
+    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
+    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
+    # skip ci/chore/test from changelog
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^chore|^ci|^test|^style|^build", skip = true },
+    { body = ".*security", group = "<!-- 4 -->🛡️ Security" },
+    { message = "^revert", group = "<!-- 5 -->◀️ Revert" },
+]
+filter_commits = true
+sort_commits = "oldest"
+topo_order_commits = true
