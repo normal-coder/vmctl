@@ -84,6 +84,11 @@ func NewRootCmd() *cobra.Command {
 	// Unknown or malformed flags become localized usage errors (exit 2).
 	root.SetFlagErrorFunc(flagError)
 
+	// Localize cobra's usage template labels and pflag's
+	// " (default ...)" flag suffix for the whole tree.
+	cobra.AddTemplateFunc("localizeFlagDefaults", localizeFlagDefaults)
+	root.SetUsageTemplate(usageTemplate())
+
 	root.AddCommand(
 		newListCmd(),
 		newInfoCmd(),

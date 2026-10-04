@@ -31,6 +31,7 @@ var enCatalog = map[string]string{
 
 	// vmcli (snapshot uid fallback)
 	"err.vmcli.notFound": "vmcli not found (requires VMware Fusion 13.5+; set --vmcli or VMCTL_VMCLI)",
+	"err.vmcli.noUid":    "no uid for snapshot %q",
 
 	// vmrun backend
 	"err.name.empty":           "name must not be empty",
@@ -42,6 +43,7 @@ var enCatalog = map[string]string{
 	"err.vmrun.powerOnTimeout": "timed out waiting for %q to power on",
 	"err.vmrun.offUseStart":    "%q is powered off, use start",
 	"err.vmrun.exitZero":       "vmrun reported an error with exit code 0",
+	"err.vmrun.failed":         "vmrun failed",
 	"err.dest.exists":          "destination already exists: %s",
 	"err.dest.notDir":          "destination is not a directory: %s",
 	"err.dest.notEmpty":        "destination directory is not empty: %s",
@@ -56,9 +58,23 @@ var enCatalog = map[string]string{
 	"err.snapshot.invalidName": "invalid snapshot name: %w",
 
 	// output
-	"output.noVMs":       "No virtual machines found.",
-	"output.noSnapshots": "No snapshots for %s.",
-	"output.ok":          "ok",
+	"output.noVMs":          "No virtual machines found.",
+	"output.noSnapshots":    "No snapshots for %s.",
+	"output.ok":             "ok",
+	"output.header.name":    "NAME",
+	"output.header.state":   "STATE",
+	"output.header.cpus":    "CPUS",
+	"output.header.mem":     "MEM",
+	"output.header.guestOS": "GUEST OS",
+	"output.header.field":   "FIELD",
+	"output.header.value":   "VALUE",
+	"output.field.name":     "Name",
+	"output.field.state":    "State",
+	"output.field.guestOS":  "Guest OS",
+	"output.field.cpus":     "CPUs",
+	"output.field.memory":   "Memory",
+	"output.field.guestIP":  "Guest IP",
+	"output.field.path":     "Path",
 
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere backend requires an endpoint; configure it in a profile",
@@ -77,10 +93,15 @@ var enCatalog = map[string]string{
 	"err.clone.name":               "a name for the new virtual machine is required",
 	"err.vsphere.noIP":             "guest has not reported an IP address yet (is VMware Tools running?)",
 	"err.exec.empty":               "command must not be empty",
+	"err.exec.fetchOutput":         "fetching command output: %w",
+	"err.exec.fetchExit":           "fetching exit code: %w",
+	"err.vsphere.runtimeProps":     "runtime properties unavailable",
+	"err.vsphere.nilTask":          "internal error: nil task",
 
 	// errors
-	"err.prefix":       "Error",
-	"err.notSupported": "operation not supported by this backend",
+	"err.prefix":                "Error",
+	"err.notSupported":          "operation not supported by this backend",
+	"err.driver.unknownBackend": "unknown backend %q",
 
 	// usage (cobra args / pflag flags)
 	"err.args.exact":            "accepts %d arg(s), received %d",
@@ -94,6 +115,7 @@ var enCatalog = map[string]string{
 	"err.flag.badSyntax":        "bad flag syntax: %s",
 	"err.flag.invalidValue":     "flag --%s has an invalid value %q",
 	"err.flag.required":         "required flag(s) %s not set",
+	"err.flag.generic":          "invalid flag argument: %s",
 	"err.help.unknownTopic":     "Unknown help topic %q",
 
 	// help
@@ -101,6 +123,18 @@ var enCatalog = map[string]string{
 	"cmd.help.long": `Help provides help for any command in the application.
 Simply type vmctl help [path to command] for full details.`,
 	"flag.help": "help for %s",
+
+	// usage template labels (cobra's default template, localized once at build)
+	"usage.usage":              "Usage",
+	"usage.aliases":            "Aliases",
+	"usage.examples":           "Examples",
+	"usage.availableCommands":  "Available Commands",
+	"usage.additionalCommands": "Additional Commands",
+	"usage.flags":              "Flags",
+	"usage.globalFlags":        "Global Flags",
+	"usage.additionalHelp":     "Additional help topics",
+	"usage.moreInfo":           `Use "%s [command] --help" for more information about a command.`,
+	"flag.defaultWord":         " (default ",
 
 	// list / info
 	"cmd.list.short": "List virtual machines",
@@ -205,4 +239,66 @@ how to load the generated script.`,
 	"cmd.completion.zsh":        "Generate the autocompletion script for zsh",
 	"cmd.completion.fish":       "Generate the autocompletion script for fish",
 	"cmd.completion.powershell": "Generate the autocompletion script for powershell",
+	"flag.completion.noDesc":    "disable completion descriptions",
+	"cmd.completion.bashLong": `Generate the autocompletion script for the bash shell.
+
+This script depends on the 'bash-completion' package.
+If it is not installed already, you can install it via your OS's package manager.
+
+To load completions in your current shell session:
+
+	source <(vmctl completion bash)
+
+To load completions for every new session, execute once:
+
+#### Linux:
+
+	vmctl completion bash > /etc/bash_completion.d/vmctl
+
+#### macOS:
+
+	vmctl completion bash > $(brew --prefix)/etc/bash_completion.d/vmctl
+
+You will need to start a new shell for this setup to take effect.`,
+	"cmd.completion.zshLong": `Generate the autocompletion script for the zsh shell.
+
+If shell completion is not already enabled in your environment you will need
+to enable it.  You can execute the following once:
+
+	echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+To load completions in your current shell session:
+
+	source <(vmctl completion zsh)
+
+To load completions for every new session, execute once:
+
+#### Linux:
+
+	vmctl completion zsh > "${fpath[1]}/_vmctl"
+
+#### macOS:
+
+	vmctl completion zsh > $(brew --prefix)/share/zsh/site-functions/_vmctl
+
+You will need to start a new shell for this setup to take effect.`,
+	"cmd.completion.fishLong": `Generate the autocompletion script for the fish shell.
+
+To load completions in your current shell session:
+
+	vmctl completion fish | source
+
+To load completions for every new session, execute once:
+
+	vmctl completion fish > ~/.config/fish/completions/vmctl.fish
+
+You will need to start a new shell for this setup to take effect.`,
+	"cmd.completion.powershellLong": `Generate the autocompletion script for powershell.
+
+To load completions in your current shell session:
+
+	vmctl completion powershell | Out-String | Invoke-Expression
+
+To load completions for every new session, add the output of the above command
+to your powershell profile.`,
 }

@@ -31,6 +31,7 @@ var zhCatalog = map[string]string{
 
 	// vmcli (snapshot uid fallback)
 	"err.vmcli.notFound": "找不到 vmcli（需要 VMware Fusion 13.5+，可用 --vmcli 或 VMCTL_VMCLI 指定路径）",
+	"err.vmcli.noUid":    "快照 %q 没有可用的 uid",
 
 	// vmrun backend
 	"err.name.empty":           "名称不能为空",
@@ -42,6 +43,7 @@ var zhCatalog = map[string]string{
 	"err.vmrun.powerOnTimeout": "等待 %q 开机超时",
 	"err.vmrun.offUseStart":    "%q 处于关机状态，请改用 start",
 	"err.vmrun.exitZero":       "vmrun 以退出码 0 结束但报告了错误",
+	"err.vmrun.failed":         "vmrun 执行失败",
 	"err.dest.exists":          "目标路径已存在：%s",
 	"err.dest.notDir":          "目标不是目录：%s",
 	"err.dest.notEmpty":        "目标目录非空：%s",
@@ -56,9 +58,23 @@ var zhCatalog = map[string]string{
 	"err.snapshot.invalidName": "无效的快照名：%w",
 
 	// output
-	"output.noVMs":       "未找到虚拟机。",
-	"output.noSnapshots": "%s 没有快照。",
-	"output.ok":          "成功",
+	"output.noVMs":          "未找到虚拟机。",
+	"output.noSnapshots":    "%s 没有快照。",
+	"output.ok":             "成功",
+	"output.header.name":    "名称",
+	"output.header.state":   "状态",
+	"output.header.cpus":    "CPU",
+	"output.header.mem":     "内存",
+	"output.header.guestOS": "客户机系统",
+	"output.header.field":   "字段",
+	"output.header.value":   "值",
+	"output.field.name":     "名称",
+	"output.field.state":    "状态",
+	"output.field.guestOS":  "客户机系统",
+	"output.field.cpus":     "CPU",
+	"output.field.memory":   "内存",
+	"output.field.guestIP":  "客户机 IP",
+	"output.field.path":     "路径",
 
 	// vsphere backend
 	"err.vsphere.endpoint":         "vsphere 后端缺少 endpoint，请在 profile 中配置",
@@ -77,10 +93,15 @@ var zhCatalog = map[string]string{
 	"err.clone.name":               "必须指定新虚拟机名称",
 	"err.vsphere.noIP":             "客户机尚未上报 IP 地址（VMware Tools 是否在运行？）",
 	"err.exec.empty":               "命令不能为空",
+	"err.exec.fetchOutput":         "读取命令输出失败：%w",
+	"err.exec.fetchExit":           "读取退出码失败：%w",
+	"err.vsphere.runtimeProps":     "无法获取虚拟机运行时属性",
+	"err.vsphere.nilTask":          "内部错误：任务为空",
 
 	// errors
-	"err.prefix":       "错误",
-	"err.notSupported": "此操作该后端不支持",
+	"err.prefix":                "错误",
+	"err.notSupported":          "此操作该后端不支持",
+	"err.driver.unknownBackend": "未知后端 %q",
 
 	// usage (cobra args / pflag flags)
 	"err.args.exact":            "需要 %d 个参数，实际收到 %d 个",
@@ -94,12 +115,25 @@ var zhCatalog = map[string]string{
 	"err.flag.badSyntax":        "选项写法无效：%s",
 	"err.flag.invalidValue":     "选项 --%s 的取值 %q 无效",
 	"err.flag.required":         "缺少必填选项：%s",
+	"err.flag.generic":          "选项参数无效：%s",
 	"err.help.unknownTopic":     "未知的帮助主题 %q",
 
 	// help
 	"cmd.help.short": "显示命令的帮助",
 	"cmd.help.long":  "显示任意命令的帮助。用法：vmctl help [命令]",
 	"flag.help":      "显示 %s 的帮助",
+
+	// usage template labels (cobra's default template, localized once at build)
+	"usage.usage":              "用法",
+	"usage.aliases":            "别名",
+	"usage.examples":           "示例",
+	"usage.availableCommands":  "可用命令",
+	"usage.additionalCommands": "其他命令",
+	"usage.flags":              "选项",
+	"usage.globalFlags":        "全局选项",
+	"usage.additionalHelp":     "附加帮助主题",
+	"usage.moreInfo":           `使用 "%s [command] --help" 查看命令的详细用法`,
+	"flag.defaultWord":         " (默认 ",
 
 	// list / info
 	"cmd.list.short": "列出虚拟机",
@@ -202,4 +236,66 @@ VMCTL_GUEST_PASSWORD 环境变量代替 --password，
 	"cmd.completion.zsh":        "生成 zsh 补全脚本",
 	"cmd.completion.fish":       "生成 fish 补全脚本",
 	"cmd.completion.powershell": "生成 powershell 补全脚本",
+	"flag.completion.noDesc":    "补全脚本不带候选描述",
+	"cmd.completion.bashLong": `生成 bash shell 的自动补全脚本。
+
+该脚本依赖 'bash-completion' 软件包。
+如尚未安装，可用系统的包管理器安装。
+
+当前 shell 会话中加载补全：
+
+	source <(vmctl completion bash)
+
+每次新会话都加载，执行一次：
+
+#### Linux:
+
+	vmctl completion bash > /etc/bash_completion.d/vmctl
+
+#### macOS:
+
+	vmctl completion bash > $(brew --prefix)/etc/bash_completion.d/vmctl
+
+配置生效需要重新打开 shell。`,
+	"cmd.completion.zshLong": `生成 zsh shell 的自动补全脚本。
+
+如当前环境尚未启用 shell 补全，需要先启用。
+可执行一次：
+
+	echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+当前 shell 会话中加载补全：
+
+	source <(vmctl completion zsh)
+
+每次新会话都加载，执行一次：
+
+#### Linux:
+
+	vmctl completion zsh > "${fpath[1]}/_vmctl"
+
+#### macOS:
+
+	vmctl completion zsh > $(brew --prefix)/share/zsh/site-functions/_vmctl
+
+配置生效需要重新打开 shell。`,
+	"cmd.completion.fishLong": `生成 fish shell 的自动补全脚本。
+
+当前 shell 会话中加载补全：
+
+	vmctl completion fish | source
+
+每次新会话都加载，执行一次：
+
+	vmctl completion fish > ~/.config/fish/completions/vmctl.fish
+
+配置生效需要重新打开 shell。`,
+	"cmd.completion.powershellLong": `生成 powershell 的自动补全脚本。
+
+当前会话中加载补全：
+
+	vmctl completion powershell | Out-String | Invoke-Expression
+
+每次新会话都加载，把上面命令的输出
+加入你的 powershell 配置文件。`,
 }
