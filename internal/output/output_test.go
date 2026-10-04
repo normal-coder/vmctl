@@ -21,7 +21,7 @@ func TestPrintSnapshots(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{"NAME", "UID", "base", "child", "legacy", "42", "7"} {
+	for _, want := range []string{i18n.T("output.header.name"), "UID", "base", "child", "legacy", "42", "7"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output %q should contain %q", out, want)
 		}

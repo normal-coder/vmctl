@@ -66,11 +66,11 @@ func (d *Driver) Exec(ctx context.Context, ref string, opts driver.ExecOptions) 
 
 	if _, err := d.runner.run(ctx, withAuth(auth,
 		"CopyFileFromGuestToHost", path, outGuest, hostOut.Name())...); err != nil {
-		return "", 0, fmt.Errorf("fetching command output: %w", err)
+		return "", 0, fmt.Errorf(i18n.T("err.exec.fetchOutput"), err)
 	}
 	if _, err := d.runner.run(ctx, withAuth(auth,
 		"CopyFileFromGuestToHost", path, codeGuest, hostCode.Name())...); err != nil {
-		return "", 0, fmt.Errorf("fetching exit code: %w", err)
+		return "", 0, fmt.Errorf(i18n.T("err.exec.fetchExit"), err)
 	}
 
 	code := -1

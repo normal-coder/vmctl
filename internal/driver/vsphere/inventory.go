@@ -9,6 +9,7 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
@@ -112,7 +113,7 @@ func (d *Driver) powerStateOf(ctx context.Context, vm *object.VirtualMachine) (t
 		return "", err
 	}
 	if m.Runtime.PowerState == "" {
-		return "", errors.New("runtime properties unavailable")
+		return "", errors.New(i18n.T("err.vsphere.runtimeProps"))
 	}
 	return m.Runtime.PowerState, nil
 }

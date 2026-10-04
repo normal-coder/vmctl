@@ -25,7 +25,14 @@ func PrintVMs(w io.Writer, vms []model.VM, asJSON bool) error {
 		return err
 	}
 	t := newTable()
-	t.AppendHeader(table.Row{"NAME", "STATE", "CPUS", "MEM", "GUEST OS", "UUID"})
+	t.AppendHeader(table.Row{
+		i18n.T("output.header.name"),
+		i18n.T("output.header.state"),
+		i18n.T("output.header.cpus"),
+		i18n.T("output.header.mem"),
+		i18n.T("output.header.guestOS"),
+		"UUID",
+	})
 	for _, vm := range vms {
 		t.AppendRow(table.Row{
 			vm.Name,
@@ -46,17 +53,17 @@ func PrintInfo(w io.Writer, info *model.VMInfo, asJSON bool) error {
 		return writeJSON(w, info)
 	}
 	t := newTable()
-	t.AppendHeader(table.Row{"FIELD", "VALUE"})
+	t.AppendHeader(table.Row{i18n.T("output.header.field"), i18n.T("output.header.value")})
 	rows := []table.Row{
-		{"Name", info.Name},
-		{"State", info.State},
+		{i18n.T("output.field.name"), info.Name},
+		{i18n.T("output.field.state"), info.State},
 		{"UUID", valueOrDash(info.ID)},
-		{"Guest OS", valueOrDash(info.GuestOS)},
-		{"CPUs", intOrDash(info.CPUs)},
-		{"Memory", memOrDash(info.MemoryMB)},
+		{i18n.T("output.field.guestOS"), valueOrDash(info.GuestOS)},
+		{i18n.T("output.field.cpus"), intOrDash(info.CPUs)},
+		{i18n.T("output.field.memory"), memOrDash(info.MemoryMB)},
 		{"Tools", valueOrDash(info.ToolsState)},
-		{"Guest IP", valueOrDash(info.GuestIP)},
-		{"Path", valueOrDash(info.Path)},
+		{i18n.T("output.field.guestIP"), valueOrDash(info.GuestIP)},
+		{i18n.T("output.field.path"), valueOrDash(info.Path)},
 	}
 	for _, r := range rows {
 		t.AppendRow(r)
@@ -95,7 +102,7 @@ func PrintSnapshots(w io.Writer, ref string, snaps []model.Snapshot, asJSON bool
 		return err
 	}
 	t := newTable()
-	t.AppendHeader(table.Row{"#", "NAME", "UID"})
+	t.AppendHeader(table.Row{"#", i18n.T("output.header.name"), "UID"})
 	for i, s := range snaps {
 		t.AppendRow(table.Row{i + 1, strings.Repeat("  ", s.Depth) + s.Name, valueOrDash(s.UID)})
 	}

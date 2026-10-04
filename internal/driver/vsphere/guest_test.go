@@ -151,7 +151,10 @@ func TestExecReadFailure(t *testing.T) {
 	fake := &fakeGuest{pid: 1, code: 0, readErr: errors.New("no transfer")}
 	d, ctx, vm := execSim(t, fake)
 	out, _, err := d.Exec(ctx, vm.Name, driver.ExecOptions{Script: "true"})
-	if err == nil || !strings.Contains(err.Error(), "fetching command output") {
+	// The localized wrapper has %w expanded by fmt.Errorf; match on
+	// the message prefix without it.
+	want := strings.TrimSuffix(i18n.T("err.exec.fetchOutput"), "%w")
+	if err == nil || !strings.Contains(err.Error(), want) {
 		t.Errorf("want wrapped read error, got %v", err)
 	}
 	if out != "" {

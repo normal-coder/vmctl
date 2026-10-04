@@ -160,7 +160,7 @@ func (d *Driver) vmcliRefsFor(ctx context.Context, path, name string) (string, e
 		}
 	}
 	if len(refs) == 0 {
-		return "", fmt.Errorf("no uid for snapshot %q", name)
+		return "", fmt.Errorf(i18n.T("err.vmcli.noUid"), name)
 	}
 	return strings.Join(refs, ", "), nil
 }

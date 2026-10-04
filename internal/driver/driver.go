@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 
+	"gitee.com/normalcoder/vmctl/internal/i18n"
 	"gitee.com/normalcoder/vmctl/internal/model"
 )
 
@@ -193,7 +194,7 @@ func Register(name string, f Factory) {
 func Open(name string, opts Options) (Driver, error) {
 	f, ok := registry[name]
 	if !ok {
-		return nil, fmt.Errorf("unknown backend %q", name)
+		return nil, fmt.Errorf(i18n.T("err.driver.unknownBackend"), name)
 	}
 	return f(opts)
 }

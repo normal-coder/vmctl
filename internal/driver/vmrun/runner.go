@@ -49,7 +49,7 @@ func (e *Error) Error() string {
 		if e.Err != nil {
 			msg = e.Err.Error()
 		} else {
-			msg = "vmrun failed"
+			msg = i18n.T("err.vmrun.failed")
 		}
 	}
 	return msg

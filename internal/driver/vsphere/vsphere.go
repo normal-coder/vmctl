@@ -104,7 +104,7 @@ func redact(s, secret string) string {
 // success for an operation still in flight.
 func waitTask(ctx context.Context, t *object.Task) error {
 	if t == nil {
-		return errors.New("nil task")
+		return errors.New(i18n.T("err.vsphere.nilTask"))
 	}
 	return t.Wait(ctx)
 }

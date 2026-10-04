@@ -80,7 +80,7 @@ func (d *Driver) Exec(ctx context.Context, ref string, opts driver.ExecOptions) 
 	}
 	out, err := ops.readFile(ctx, outGuest)
 	if err != nil {
-		return "", code, fmt.Errorf("fetching command output: %w", err)
+		return "", code, fmt.Errorf(i18n.T("err.exec.fetchOutput"), err)
 	}
 	return out, code, nil
 }
