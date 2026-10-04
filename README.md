@@ -9,6 +9,20 @@ vmctl 是一个参考 `prlctl` 命令风格设计的 VMware 虚拟机控制 CLI�
 
 配置文件支持多 profile（一条命令切换本地/远程环境），界面文案支持中英双语。
 
+## 安装
+
+### Homebrew
+
+```bash
+brew install --cask normal-coder/tap/vmctl
+```
+
+安装后 `vmctl` 已在 `PATH` 中，升级用 `brew upgrade --cask vmctl`。
+
+### 从源码
+
+见下方「构建」章节。
+
 ## 构建
 
 ```bash
@@ -254,3 +268,13 @@ internal/model     与后端无关的 VM 模型
 - [x] M5：vmcli 同名快照 fallback + 存量英文错误汉化回填 + shell 补全 + 退出码/用法错误打磨
 - [x] M6：cobra Args 报错文案全量中文化、`snapshot list` 增加 uid 列、
   version JSON 输出、退出码更细分类
+
+## 维护与发布
+
+```bash
+make next-version   # 预览下一个版本号与待发布提交
+make release        # 确认后更新 CHANGELOG、打 GPG 签名 tag 并推送，触发 CI 发布
+```
+
+发布由 GitHub Actions（GoReleaser）构建多平台产物，并自动向
+[`normal-coder/homebrew-tap`](https://github.com/normal-coder/homebrew-tap) 推送 cask。
