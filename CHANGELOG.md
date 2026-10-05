@@ -1,3 +1,10 @@
+## [0.2.0] - 2026-10-05
+
+### 🚀 Features
+- Localize usage template labels and flag default suffix
+- Localize completion command help and flag error fallback
+- Localize output table headers and backend error messages
+
 ## [0.1.0] - 2026-10-04
 
 ### 🚀 Features
