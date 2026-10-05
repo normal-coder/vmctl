@@ -278,3 +278,7 @@ make release        # 确认后更新 CHANGELOG、打 GPG 签名 tag 并推送�
 
 发布由 GitHub Actions（GoReleaser）构建多平台产物，并自动向
 [`normal-coder/homebrew-tap`](https://github.com/normal-coder/homebrew-tap) 推送 cask。
+
+## License
+
+MIT

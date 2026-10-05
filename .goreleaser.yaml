@@ -43,6 +43,7 @@ homebrew_casks:
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: https://github.com/normal-coder/vmctl
     description: VMware virtual machine control CLI inspired by prlctl, with vmrun and vSphere backends
+    license: MIT
     hooks:
       post:
         install: |
